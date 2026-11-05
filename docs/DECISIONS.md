@@ -52,13 +52,13 @@ decision, numbered in the order made
 ## 2 Questions / Unknowns
 
 Each says what I assume and what it costs if wrong. All are assumptions until answered: the real device
-contracts settle Q-01 to Q-05, and the real binary Q-06.
+contracts settle Q-01 to Q-06, and the real binary Q-07.
 
 ### Q-01 What do a device's health and diagnostics endpoints return?
 
-- Assumption: JSON, in a contract I define. Health says whether the device is up, and its capabilities: type,
-  protocols (name, version, port) and checksum algorithm. Diagnostics are a separate call, in a protocol the device
-  speaks.
+- Assumption: JSON, in a contract I define. Health says whether the device is up, its ID, and its capabilities:
+  type, protocols (name, version, port) and checksum algorithm. Diagnostics are a separate call, in a protocol the
+  device speaks.
 - If wrong: only the device-facing code and the contract change.
 
 ### Q-02 Do all devices speak the same contract?
@@ -76,107 +76,121 @@ contracts settle Q-01 to Q-05, and the real binary Q-06.
 - Assumption: one call, in the protocol the device prefers.
 - If wrong: the diagnostics code changes.
 
-### Q-05 What does the binary checksum?
+### Q-05 How is the status in diagnostics different from health?
+
+- Assumption: health is the device's word on whether it works, from a small set the monitor knows (D-29).
+  The diagnostics status is a detail in the device's own words, kept as sent and never interpreted. Neither changes
+  the state (D-27).
+- If wrong: if they mean the same, drop one. If the monitor must act on the diagnostics status, it gets a known set
+  too, and the client's verdict (D-27) weighs it.
+
+### Q-06 What does the binary checksum?
 
 - Assumption: the diagnostics as sent, without the checksum the device reported, with the algorithm from
   capabilities. The service compares the two.
 - If wrong: only what is passed to the binary changes.
 
-### Q-06 How is the binary run?
+### Q-07 How is the binary run?
 
 - Assumption: payload on stdin, checksum in hex on stdout. Path, arguments and environment are settings.
 - If wrong: settings change, at worst the code that runs it.
 
-### Q-07 How often is a device checked?
+### Q-08 How often is a device checked?
 
 - Assumption: about every 30 seconds, a setting.
 - If wrong: a setting changes.
 
-### Q-08 How many devices?
+### Q-09 How many devices?
 
 - Assumption: a handful at the stand, up to about a thousand later. Several checked at once, up to a limit.
-- If wrong: the limit changes, and beyond that the scheduling (Q-09).
+- If wrong: the limit changes, and beyond that the scheduling (Q-10).
 
-### Q-09 Are some devices checked more often than others?
+### Q-10 Are some devices checked more often than others?
 
 - Assumption: no, one pace for all.
 - If wrong: each device gets its own next check time, in the database.
 
-### Q-10 Are diagnostics read on every check?
+### Q-11 Are diagnostics read on every check?
 
 - Assumption: yes, after a health call that answers.
 - If wrong: diagnostics get a slower pace, or sampling.
 
-### Q-11 How long may a call take before it gives up?
+### Q-12 How long may a call take before it gives up?
 
 - Assumption: 3 seconds, leaving room for a retry on an unstable network.
 - If wrong: settings change.
 
-### Q-12 Who may use the API?
+### Q-13 Who may use the API?
 
 - Assumption: only the presenter, through the dashboard on the laptop it runs on. Nothing listens beyond that laptop:
   visitors watch the screen.
 - If wrong: other machines need access, such as a second screen or a tablet, and sign-in comes first.
 
-### Q-13 Do devices need credentials?
+### Q-14 Do devices need credentials?
 
 - Assumption: some take a bearer token. Tokens never go in the database.
 - If wrong: other schemes, per device as needed.
 
-### Q-14 What does pairing with the PoC life-cycle mean?
+### Q-15 What does pairing with the PoC life-cycle mean?
 
-- Assumption: the checksum integration is tested before the binary arrives. A stand-in runs through the code that
-  will run the real one, where it will run: startup, every probe, on demand. The real binary changes settings, not
-  tests, so their results hold.
+- Assumption: the binary runs inside the service's life-cycle: run by the service for each checksum, stopped with it,
+  deployed with it. Until it arrives, a stand-in runs through the same code, so the real binary changes settings, not
+  tests, and their results hold.
 - If wrong: the tests follow the life-cycle meant. The service does not change.
 
-### Q-15 What happens to a removed device?
+### Q-16 What happens to a removed device?
 
 - Assumption: its checks stop, and its history stays.
 - If wrong: removal deletes its history too.
 
-### Q-16 How does an error answer count, such as a 404, a 500 or an HTML page?
+### Q-17 How does an error answer count, such as a 404, a 500 or an HTML page?
 
-- Assumption: a failed check, recorded with why: no answer, or an unexpected one.
-- If wrong: some answers count as up. The outcome mapping and transitions change.
+- Assumption: a failed check, recorded with why: no answer, or an unexpected one. Misconfigured instead when it shows
+  the registration is wrong: 401 or 403, 404 on the health path, another device answering, a TLS failure, no token
+  to send.
+- If wrong: some answers count as up, or move between failed and misconfigured. The outcome mapping and transitions
+  change.
 
-### Q-17 Where does the service run?
+### Q-18 Where does the service run?
 
 - Assumption: on a laptop at the stand, with Postgres beside it.
 - If wrong: the setup changes, not the service. In the cloud, retune probes at once, and move device tokens to the
   platform's secret store.
 
-### Q-18 Can more than one instance run at once?
+### Q-19 Can more than one instance run at once?
 
-- Assumption: no, one (follows from Q-17).
+- Assumption: no, one (follows from Q-18).
 - If wrong: split checks between instances, and assess database connections.
 
-### Q-19 How long is the list of devices?
+### Q-20 How long is the list of devices?
 
 - Assumption: up to about a thousand.
 - If wrong: pagination comes sooner.
 
-### Q-20 How often are capabilities discovered again?
+### Q-21 How often are capabilities discovered again?
 
 - Assumption: on every check, as health returns them.
 - If wrong: keep them, and reread at a slower pace.
 
-### Q-21 Is a device's history needed through the API?
+### Q-22 Is a device's history needed through the API?
 
 - Assumption: no, the brief asks for the latest status. History is kept for offline inspection.
 - If wrong: add an endpoint. History is kept either way.
 
-### Q-22 What does a device ID look like?
+### Q-23 What does a device ID look like?
 
-- Assumption: text that fits in a URL path, chosen by the user or the vendor.
-- If wrong: derive a URL-safe ID, such as a hash of the vendor's.
+- Assumption: the device's own ID, and text that fits in a URL path. Whoever registers a device enters it, as the
+  device's health answer gives it. Each probe compares the ID in the health answer with the registered one: another
+  ID means the base URL reaches the wrong device (`wrong_device`).
+- If wrong: an ID the user chooses, and the registration keeps the device's own ID to compare with. Not URL-safe:
+  derive one, such as a hash.
 
-### Q-23 Must changes to the device list be audited?
+### Q-24 Must changes to the device list be audited?
 
 - Assumption: no.
 - If wrong: an audit log beside the devices, or event sourcing.
 
-### Q-24 Is a screen to show customers needed?
+### Q-25 Is a screen to show customers needed?
 
 - Assumption: yes, a simple dashboard: "makes our hardware look smart" and "look professional", though the API is what
   is asked for.
@@ -196,7 +210,7 @@ docs, and the reply.
 - Why: the brief asks for a service but judges the demo. With no devices at hand, only a simulator makes the demo
   and the tests possible.
 - Then: AI builds the simulator and dashboard.
-- Serves: R-01, R-08, R-16, R-17, R-19, I-02 · Answers: Q-24
+- Serves: R-01, R-08, R-16, R-17, R-19, I-02 · Answers: Q-25
 
 #### D-02 Work on assumptions, each cheap to change
 
@@ -205,7 +219,115 @@ docs, and the reply.
   an interface.
 - Serves: I-03 · Answers: every Q
 
-### Process
+### Architecture
+
+#### D-21 Ports and Adapters, boundaries enforced by lint
+
+- Why: device protocols, the checksum binary, storage and the API each sit behind a port, so each assumption is one
+  adapter to replace (D-02).
+- Then: the core imports only the core, and infrastructure nothing of the monitor's. Lint fails otherwise.
+- Serves: I-03, I-04, I-05
+
+#### D-25 Design first: docs in one commit, then types in one commit
+
+- Why: everything speaks the domain model, so its names are settled and reviewed before code uses them.
+- Then: the one exception to D-14. Behaviour arrives later, each with its tests.
+- Serves: I-10
+
+### Data
+
+#### D-26 A device's identity is kept apart from how to reach it
+
+`Device` is the ID and name. `DeviceRegistration` adds the base URL and auth.
+
+- Why: statuses and history refer to a device after it is unregistered (Q-16), and need nothing else of it.
+- Serves: R-12, R-13
+
+#### D-27 The monitor's conclusion is kept apart from what the device reports
+
+The state (`unknown`, `up`, `suspect`, `down`, `misconfigured`) is the monitor's. Health, capabilities and diagnostics
+are the device's, kept as reported.
+
+- Why: a device that says "degraded" still answered, so it is up. Folding its words into the state stores a policy,
+  and changing it would mean rewriting history.
+- Then: a client wanting one verdict combines state, health and checksum itself.
+- Serves: R-03, R-06, R-07
+
+#### D-28 Down after N failed probes in a row, up after one that succeeds
+
+No response and unexpected responses count (Q-17). Misconfigured ones do not (D-39).
+
+- Why: slow to raise an alarm on an unstable network, quick to clear it.
+- Then: a real outage shows as `suspect` for the first N - 1 failed probes.
+- Serves: R-10, R-11
+
+#### D-39 A misconfigured registration is its own state, never down
+
+One answer showing the registration is wrong is enough (Q-17). It leaves the state as from `up`.
+
+- Why: `down` would send staff to a device that may be fine. Asking again gets the same answer, so no debounce (D-28).
+- Then: staff see what to fix, and the next probe after the fix recovers it.
+- Serves: R-11, I-09 · Answers: Q-17
+
+### Monitoring
+
+#### D-31 Monitoring State lives in memory, and starts as running
+
+- Why: the demo works as soon as the service starts, and a restarted laptop monitors again.
+- Then: a stop does not survive a restart.
+- Serves: R-19, I-09
+
+#### D-32 Stopping monitoring lets the round in progress finish
+
+- Why: no device is left half checked. At the stand, a round takes seconds.
+- Then: probing stops within one round, and until then the state is `stopping`.
+- Serves: R-13
+
+#### D-33 The next round starts a fixed time after the previous one ends
+
+- Why: rounds never overlap, so the concurrency limit holds and no device is probed twice at once.
+- Then: the pace is the interval plus the round's duration, which is logged (I-01).
+- Serves: R-10, I-07
+
+#### D-34 Diagnostics are read only after a health call that answers
+
+- Why: health says which protocols the device speaks (R-06), and a silent device would only use up the diagnostics
+  budget.
+- Then: a failing probe takes at most the health budget.
+- Serves: R-06, R-07 · Answers: Q-11
+
+#### D-35 Retry a device call only when asking again could get another answer
+
+That is, no response or a 5xx. A call that succeeded is never repeated.
+
+- Why: a dropped packet, or an error while a device restarts, passes. A 404 comes back the same.
+- Then: exponential backoff with full jitter, one policy for all devices.
+- Serves: R-10, R-11
+
+#### D-37 Every timeout sits inside a budget
+
+A timeout limits one wait, a budget a group of them with their retries. Defaults are in
+[ARCHITECTURE.md](./ARCHITECTURE.md#timeouts-and-budgets).
+
+- Why: a slow device cannot hold a round past its budget, nor lose its retry to one long attempt.
+- Then: the service warns at startup when a step's attempts do not fit its budget.
+- Serves: R-10, I-07 · Answers: Q-12
+
+### Code and process
+
+#### D-38 Device tokens are referred to, never stored
+
+A device's `auth` names where its token is kept (`secretRef`) (Q-14).
+
+- Why: the database can be inspected offline (R-13) without exposing device credentials.
+- Serves: R-13
+
+#### D-22 Expected failures are returned, not thrown
+
+A `Result`, `{ ok, value | failure }`, whose failure says why. A throw means a bug.
+
+- Why: failures are part of a port's contract, and the types make callers handle them.
+- Serves: R-11, I-10
 
 #### D-14 Add things when they are needed
 
@@ -217,27 +339,32 @@ docs, and the reply.
 
 Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 
-| ID   | Decision                                                                  | Serves           |
-|------|---------------------------------------------------------------------------|------------------|
-| D-08 | Node.js 26 (current LTS) and pnpm, pinned by mise                         | R-01, R-18, R-19 |
-| D-09 | TypeScript, run by Node.js as is: no build step, `tsc` only checks        | I-10             |
-| D-10 | One pnpm workspace for every part                                         | R-19, I-10       |
-| D-11 | Node.js's test runner, the kind of test in the file name                  | R-17             |
-| D-12 | Keep a sanity test, as `tsc` and oxlint fail with no files                | R-17             |
-| D-13 | One command for every quick check: `pnpm check`                           | R-17, I-10       |
-| D-15 | Small commits, in a linear history                                        | I-10             |
-| D-16 | oxfmt formats the code, not Markdown                                      | I-10             |
-| D-17 | oxlint, with types, only checks. Fixes are applied separately, for review | I-10             |
-| D-18 | One way to write each thing, enforced by lint                             | I-10             |
-| D-19 | Git hooks with hk, installed by mise                                      | R-17, I-10       |
-| D-20 | CI runs what the pre-push hook runs                                       | R-17             |
+| ID   | Decision                                                                      | Serves           |
+|------|-------------------------------------------------------------------------------|------------------|
+| D-08 | Node.js 26 (current LTS) and pnpm, pinned by mise                             | R-01, R-18, R-19 |
+| D-09 | TypeScript, run by Node.js as is: no build step, `tsc` only checks            | I-10             |
+| D-10 | One pnpm workspace for every part                                             | R-19, I-10       |
+| D-11 | Node.js's test runner, the kind of test in the file name                      | R-17             |
+| D-12 | Keep a sanity test, as `tsc` and oxlint fail with no files                    | R-17             |
+| D-13 | One command for every quick check: `pnpm check`                               | R-17, I-10       |
+| D-15 | Small commits, in a linear history                                            | I-10             |
+| D-16 | oxfmt formats the code, not Markdown                                          | I-10             |
+| D-17 | oxlint, with types, only checks. Fixes are applied separately, for review     | I-10             |
+| D-18 | One way to write each thing, enforced by lint                                 | I-10             |
+| D-19 | Git hooks with hk, installed by mise                                          | R-17, I-10       |
+| D-20 | CI runs what the pre-push hook runs                                           | R-17             |
+| D-23 | Variants are discriminated unions                                             | I-10             |
+| D-24 | Every call that leaves the process takes an abort signal                      | I-07, I-08       |
+| D-29 | A health word the monitor does not know is kept as `unrecognized`, not failed | R-06, R-10       |
+| D-30 | Devices are listed by ID, in code-point order, the same in every datastore    | R-08             |
+| D-36 | Jitter spreads a wait within its backoff, never lengthens it                  | R-10, I-07       |
 
 ## 4 Not doing (yet)
 
 | ID   | Not doing          | Why                            | Brings it in                                  |
 |------|--------------------|--------------------------------|-----------------------------------------------|
-| D-03 | Auth               | Presenter's laptop only (Q-12) | After the trade show                          |
-| D-04 | Multiple instances | One laptop (Q-17, Q-18)        | Too many devices, or an autoscaling cloud     |
+| D-03 | Auth               | Presenter's laptop only (Q-13) | After the trade show                          |
+| D-04 | Multiple instances | One laptop (Q-18, Q-19)        | Too many devices, or an autoscaling cloud     |
 | D-05 | Metrics, tracing   | Logs cover the stand (I-01)    | Real use (trends, alerts), tuning concurrency |
 | D-06 | Rate limiting      | Only the presenter has access  | As D-03                                       |
-| D-07 | Per-device pace    | One pace for all (Q-09)        | Mixed paces, or too many for one round        |
+| D-07 | Per-device pace    | One pace for all (Q-10)        | Mixed paces, or too many for one round        |

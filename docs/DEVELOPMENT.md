@@ -58,6 +58,9 @@ Node's test runner runs them, and the file name says which kind a test is (D-11)
   promises (D-17).
 - Lint enforces: `type` rather than `interface`, function expressions, property signatures for functions in types,
   imports first and exports grouped at the end, and `undefined` rather than `null` (D-18).
+- Expected failures are returned as a `Result`, `{ ok, value | failure }`. A throw means a bug (D-22).
+- A type with variants is a discriminated union, not optional or nullable fields (D-23).
+- Every call leaving the process takes `CallOptions`, with an abort signal (D-24).
 
 ## Git hooks and CI
 
