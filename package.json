@@ -1,0 +1,23 @@
+{
+  "name": "device-monitor",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "check": "pnpm typecheck && pnpm test:unit",
+    "test": "pnpm test:unit && pnpm test:integration",
+    "test:unit": "node --test \"{apps,packages,tooling}/**/*.unit.test.ts\"",
+    "test:integration": "node --test \"{apps,packages,tooling}/**/*.integration.test.ts\"",
+    "clean:dependencies": "rimraf \"**/node_modules\"",
+    "clean": "pnpm clean:dependencies"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.6",
+    "rimraf": "^6.1.4",
+    "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": ">=26.13.0"
+  }
+}

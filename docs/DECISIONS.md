@@ -184,6 +184,8 @@ contracts settle Q-01 to Q-05, and the real binary Q-06.
 
 ## 3 Decisions
 
+The decisions that shape the design. Minor ones are one line each in [Minor decisions](#minor-decisions).
+
 ### Scope
 
 #### D-01 Deliver a stack, not only a service
@@ -202,6 +204,28 @@ docs, and the reply.
 - Then: each assumption sits behind one replaceable piece: a setting, a feature flag, an injected implementation of
   an interface.
 - Serves: I-03 · Answers: every Q
+
+### Process
+
+#### D-14 Add things when they are needed
+
+- Why: nothing is maintained before it earns its place, and each commit shows why what it adds exists.
+- Then: each tool, port and setting arrives with the first code that needs it.
+- Serves: I-10
+
+### Minor decisions
+
+Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
+
+| ID   | Decision                                                           | Serves           |
+|------|--------------------------------------------------------------------|------------------|
+| D-08 | Node.js 26 (current LTS) and pnpm, pinned by mise                  | R-01, R-18, R-19 |
+| D-09 | TypeScript, run by Node.js as is: no build step, `tsc` only checks | I-10             |
+| D-10 | One pnpm workspace for every part                                  | R-19, I-10       |
+| D-11 | Node.js's test runner, the kind of test in the file name           | R-17             |
+| D-12 | Keep a sanity test, as `tsc` and oxlint fail with no files         | R-17             |
+| D-13 | One command for every quick check: `pnpm check`                    | R-17, I-10       |
+| D-15 | Small commits, in a linear history                                 | I-10             |
 
 ## 4 Not doing (yet)
 

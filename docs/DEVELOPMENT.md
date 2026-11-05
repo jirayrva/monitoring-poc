@@ -1,0 +1,62 @@
+# Development
+
+How to work on the code. The why is in [DECISIONS.md](./DECISIONS.md), by ID.
+
+## Setup
+
+Install [mise](https://mise.jdx.dev). It installs the Node.js and pnpm pinned in `mise.toml`, which `package.json` also
+requires (D-08).
+
+```bash
+mise trust
+mise install
+pnpm install
+pnpm check
+```
+
+## Commands
+
+Run `pnpm check` before you commit (D-13). Checks that need services running stay out of it. Root scripts put the verb
+first, as in `test:unit`, so related ones sort together.
+
+| Command                 | What it does                                                       |
+|-------------------------|--------------------------------------------------------------------|
+| `pnpm check`            | Types and unit tests                                               |
+| `pnpm typecheck`        | Checks types                                                       |
+| `pnpm test`             | Runs all tests                                                     |
+| `pnpm test:unit`        | Runs `*.unit.test.ts`, which need nothing running                  |
+| `pnpm test:integration` | Runs `*.integration.test.ts`, which need the services they talk to |
+| `pnpm clean`            | Removes every `node_modules` folder                                |
+
+## Layout
+
+One pnpm workspace (D-10):
+
+- `apps/`: what runs.
+- `packages/`: what the apps share.
+- `tooling/`: scripts and checks for the repository itself.
+
+## Tests
+
+Node's test runner runs them, and the file name says which kind a test is (D-11):
+
+- `*.unit.test.ts` need nothing running.
+- `*.integration.test.ts` need the services they talk to.
+
+`tooling/sanity.unit.test.ts` stays, so the tools always have a file to work on (D-12).
+
+## Code style
+
+- TypeScript runs as is, with no build step, so only strippable syntax (`erasableSyntaxOnly`): no enums, namespaces or
+  parameter properties. `tsc` only checks (D-09).
+
+## Commits
+
+Per D-14 and D-15:
+
+- Add things when the code first needs them.
+- One change per commit, each passing `pnpm check`.
+- [Conventional Commits](https://www.conventionalcommits.org), scoped to the app or package when there is one:
+  `feat(monitor): …`. The subject says what changes, the body why.
+- Linear history: rebase, never merge.
+- During review, fixup commits, squashed once approved, before merging. No force-push once review has started.
