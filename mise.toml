@@ -1,3 +1,10 @@
 [tools]
 node = "26.13.0"
 pnpm = "12.16.1"
+# Git hooks: hk.pkl says what runs on commit and push. Pkl is the language of hk's config.
+hk = "2.8.1"
+pkl = "0.32.2"
+
+# After mise install, install the git hooks, except in CI, which has no use for them.
+[hooks]
+postinstall = '[ -n "$CI" ] || hk install --mise'

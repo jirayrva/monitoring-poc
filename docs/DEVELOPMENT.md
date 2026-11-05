@@ -5,7 +5,7 @@ How to work on the code. The why is in [DECISIONS.md](./DECISIONS.md), by ID.
 ## Setup
 
 Install [mise](https://mise.jdx.dev). It installs the Node.js and pnpm pinned in `mise.toml`, which `package.json` also
-requires (D-08).
+requires (D-08), and the git hooks (D-19).
 
 ```bash
 mise trust
@@ -21,7 +21,7 @@ first, as in `test:unit`, so related ones sort together.
 
 | Command                 | What it does                                                       |
 |-------------------------|--------------------------------------------------------------------|
-| `pnpm check`            | Format check, lint, types and unit tests                           |
+| `pnpm check`            | Format check, lint, types and unit tests. Pre-push runs it too     |
 | `pnpm format`           | Applies formatting                                                 |
 | `pnpm format:check`     | Checks formatting                                                  |
 | `pnpm lint`             | Checks linting                                                     |
@@ -58,6 +58,15 @@ Node's test runner runs them, and the file name says which kind a test is (D-11)
   promises (D-17).
 - Lint enforces: `type` rather than `interface`, function expressions, property signatures for functions in types,
   imports first and exports grouped at the end, and `undefined` rather than `null` (D-18).
+
+## Git hooks
+
+hk runs the hooks, from `hk.pkl` (D-19). Each step calls the root script of the same name, so hooks, CI and you run
+the same thing.
+
+- Pre-commit: formats staged files and stages the result, and lints them. Checks types and runs unit tests when files
+  they cover changed. Unstaged edits are set aside meanwhile, so only what is committed is checked.
+- Pre-push: `pnpm check`.
 
 ## Commits
 

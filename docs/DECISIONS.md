@@ -229,6 +229,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-16 | oxfmt formats the code, not Markdown                                      | I-10             |
 | D-17 | oxlint, with types, only checks. Fixes are applied separately, for review | I-10             |
 | D-18 | One way to write each thing, enforced by lint                             | I-10             |
+| D-19 | Git hooks with hk, installed by mise                                      | R-17, I-10       |
 
 ## 4 Not doing (yet)
 
