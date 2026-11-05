@@ -226,6 +226,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-12 | Keep a sanity test, as `tsc` and oxlint fail with no files         | R-17             |
 | D-13 | One command for every quick check: `pnpm check`                    | R-17, I-10       |
 | D-15 | Small commits, in a linear history                                 | I-10             |
+| D-16 | oxfmt formats the code, not Markdown                               | I-10             |
 
 ## 4 Not doing (yet)
 

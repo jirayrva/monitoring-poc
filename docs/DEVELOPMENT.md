@@ -21,7 +21,9 @@ first, as in `test:unit`, so related ones sort together.
 
 | Command                 | What it does                                                       |
 |-------------------------|--------------------------------------------------------------------|
-| `pnpm check`            | Types and unit tests                                               |
+| `pnpm check`            | Format check, types and unit tests                                 |
+| `pnpm format`           | Applies formatting                                                 |
+| `pnpm format:check`     | Checks formatting                                                  |
 | `pnpm typecheck`        | Checks types                                                       |
 | `pnpm test`             | Runs all tests                                                     |
 | `pnpm test:unit`        | Runs `*.unit.test.ts`, which need nothing running                  |
@@ -49,6 +51,7 @@ Node's test runner runs them, and the file name says which kind a test is (D-11)
 
 - TypeScript runs as is, with no build step, so only strippable syntax (`erasableSyntaxOnly`): no enums, namespaces or
   parameter properties. `tsc` only checks (D-09).
+- Formatting is oxfmt's: 120 columns, single quotes. Markdown and the lockfile are left as written (D-16).
 
 ## Commits
 

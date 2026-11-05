@@ -4,8 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "format": "oxfmt --no-error-on-unmatched-pattern",
+    "format:check": "oxfmt --check --no-error-on-unmatched-pattern",
     "typecheck": "tsc --noEmit",
-    "check": "pnpm typecheck && pnpm test:unit",
+    "check": "pnpm format:check && pnpm typecheck && pnpm test:unit",
     "test": "pnpm test:unit && pnpm test:integration",
     "test:unit": "node --test \"{apps,packages,tooling}/**/*.unit.test.ts\"",
     "test:integration": "node --test \"{apps,packages,tooling}/**/*.integration.test.ts\"",
@@ -14,6 +16,7 @@
   },
   "devDependencies": {
     "@types/node": "26.6.6",
+    "oxfmt": "^0.76.0",
     "rimraf": "^6.1.4",
     "typescript": "7.0.2"
   },
