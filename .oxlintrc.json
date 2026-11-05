@@ -1,0 +1,35 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "unicorn", "oxc", "import", "node"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error"
+  },
+  "rules": {
+    "func-style": ["error", "expression"],
+    "typescript/consistent-type-definitions": ["error", "type"],
+    "typescript/method-signature-style": ["error", "property"],
+    "import/exports-last": "error",
+    "import/first": "error",
+    "import/group-exports": "error",
+    "typescript/no-floating-promises": [
+      "error",
+      {
+        "allowForKnownSafeCalls": [
+          {
+            "from": "package",
+            "package": "node:test",
+            "name": ["describe", "it", "test", "suite"]
+          }
+        ]
+      }
+    ],
+    "typescript/no-misused-promises": "error",
+    "unicorn/no-null": [
+      "error",
+      {
+        "checkStrictEquality": true
+      }
+    ]
+  }
+}

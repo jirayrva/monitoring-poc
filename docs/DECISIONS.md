@@ -217,16 +217,18 @@ docs, and the reply.
 
 Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 
-| ID   | Decision                                                           | Serves           |
-|------|--------------------------------------------------------------------|------------------|
-| D-08 | Node.js 26 (current LTS) and pnpm, pinned by mise                  | R-01, R-18, R-19 |
-| D-09 | TypeScript, run by Node.js as is: no build step, `tsc` only checks | I-10             |
-| D-10 | One pnpm workspace for every part                                  | R-19, I-10       |
-| D-11 | Node.js's test runner, the kind of test in the file name           | R-17             |
-| D-12 | Keep a sanity test, as `tsc` and oxlint fail with no files         | R-17             |
-| D-13 | One command for every quick check: `pnpm check`                    | R-17, I-10       |
-| D-15 | Small commits, in a linear history                                 | I-10             |
-| D-16 | oxfmt formats the code, not Markdown                               | I-10             |
+| ID   | Decision                                                                  | Serves           |
+|------|---------------------------------------------------------------------------|------------------|
+| D-08 | Node.js 26 (current LTS) and pnpm, pinned by mise                         | R-01, R-18, R-19 |
+| D-09 | TypeScript, run by Node.js as is: no build step, `tsc` only checks        | I-10             |
+| D-10 | One pnpm workspace for every part                                         | R-19, I-10       |
+| D-11 | Node.js's test runner, the kind of test in the file name                  | R-17             |
+| D-12 | Keep a sanity test, as `tsc` and oxlint fail with no files                | R-17             |
+| D-13 | One command for every quick check: `pnpm check`                           | R-17, I-10       |
+| D-15 | Small commits, in a linear history                                        | I-10             |
+| D-16 | oxfmt formats the code, not Markdown                                      | I-10             |
+| D-17 | oxlint, with types, only checks. Fixes are applied separately, for review | I-10             |
+| D-18 | One way to write each thing, enforced by lint                             | I-10             |
 
 ## 4 Not doing (yet)
 

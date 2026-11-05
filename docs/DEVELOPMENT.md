@@ -21,9 +21,11 @@ first, as in `test:unit`, so related ones sort together.
 
 | Command                 | What it does                                                       |
 |-------------------------|--------------------------------------------------------------------|
-| `pnpm check`            | Format check, types and unit tests                                 |
+| `pnpm check`            | Format check, lint, types and unit tests                           |
 | `pnpm format`           | Applies formatting                                                 |
 | `pnpm format:check`     | Checks formatting                                                  |
+| `pnpm lint`             | Checks linting                                                     |
+| `pnpm lint:fix`         | Applies lint fixes, for you to review                              |
 | `pnpm typecheck`        | Checks types                                                       |
 | `pnpm test`             | Runs all tests                                                     |
 | `pnpm test:unit`        | Runs `*.unit.test.ts`, which need nothing running                  |
@@ -52,6 +54,10 @@ Node's test runner runs them, and the file name says which kind a test is (D-11)
 - TypeScript runs as is, with no build step, so only strippable syntax (`erasableSyntaxOnly`): no enums, namespaces or
   parameter properties. `tsc` only checks (D-09).
 - Formatting is oxfmt's: 120 columns, single quotes. Markdown and the lockfile are left as written (D-16).
+- Lint only checks, everywhere. `pnpm lint:fix` applies fixes for you to review. It also catches floating and misused
+  promises (D-17).
+- Lint enforces: `type` rather than `interface`, function expressions, property signatures for functions in types,
+  imports first and exports grouped at the end, and `undefined` rather than `null` (D-18).
 
 ## Commits
 
