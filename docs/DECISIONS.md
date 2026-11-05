@@ -230,6 +230,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-17 | oxlint, with types, only checks. Fixes are applied separately, for review | I-10             |
 | D-18 | One way to write each thing, enforced by lint                             | I-10             |
 | D-19 | Git hooks with hk, installed by mise                                      | R-17, I-10       |
+| D-20 | CI runs what the pre-push hook runs                                       | R-17             |
 
 ## 4 Not doing (yet)
 

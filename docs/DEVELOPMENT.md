@@ -19,18 +19,18 @@ pnpm check
 Run `pnpm check` before you commit (D-13). Checks that need services running stay out of it. Root scripts put the verb
 first, as in `test:unit`, so related ones sort together.
 
-| Command                 | What it does                                                       |
-|-------------------------|--------------------------------------------------------------------|
-| `pnpm check`            | Format check, lint, types and unit tests. Pre-push runs it too     |
-| `pnpm format`           | Applies formatting                                                 |
-| `pnpm format:check`     | Checks formatting                                                  |
-| `pnpm lint`             | Checks linting                                                     |
-| `pnpm lint:fix`         | Applies lint fixes, for you to review                              |
-| `pnpm typecheck`        | Checks types                                                       |
-| `pnpm test`             | Runs all tests                                                     |
-| `pnpm test:unit`        | Runs `*.unit.test.ts`, which need nothing running                  |
-| `pnpm test:integration` | Runs `*.integration.test.ts`, which need the services they talk to |
-| `pnpm clean`            | Removes every `node_modules` folder                                |
+| Command                 | What it does                                                         |
+|-------------------------|----------------------------------------------------------------------|
+| `pnpm check`            | Format check, lint, types and unit tests. Pre-push and CI run it too |
+| `pnpm format`           | Applies formatting                                                   |
+| `pnpm format:check`     | Checks formatting                                                    |
+| `pnpm lint`             | Checks linting                                                       |
+| `pnpm lint:fix`         | Applies lint fixes, for you to review                                |
+| `pnpm typecheck`        | Checks types                                                         |
+| `pnpm test`             | Runs all tests                                                       |
+| `pnpm test:unit`        | Runs `*.unit.test.ts`, which need nothing running                    |
+| `pnpm test:integration` | Runs `*.integration.test.ts`, which need the services they talk to   |
+| `pnpm clean`            | Removes every `node_modules` folder                                  |
 
 ## Layout
 
@@ -59,14 +59,15 @@ Node's test runner runs them, and the file name says which kind a test is (D-11)
 - Lint enforces: `type` rather than `interface`, function expressions, property signatures for functions in types,
   imports first and exports grouped at the end, and `undefined` rather than `null` (D-18).
 
-## Git hooks
+## Git hooks and CI
 
 hk runs the hooks, from `hk.pkl` (D-19). Each step calls the root script of the same name, so hooks, CI and you run
 the same thing.
 
 - Pre-commit: formats staged files and stages the result, and lints them. Checks types and runs unit tests when files
   they cover changed. Unstaged edits are set aside meanwhile, so only what is committed is checked.
-- Pre-push: `pnpm check`.
+- Pre-push and CI: `pnpm check`. GitHub Actions runs it on every pull request and push to `main` (D-20).
+  Integration and end-to-end tests join once there is a stack to run them against.
 
 ## Commits
 

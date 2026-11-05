@@ -45,7 +45,7 @@ hooks {
     stash = "git"
     steps = quick
   }
-  // Everything pnpm check runs, over the whole project.
+  // Everything pnpm check runs, over the whole project, as CI does, so a push does not fail there.
   ["pre-push"] {
     steps {
       ["check"] {
