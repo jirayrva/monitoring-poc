@@ -86,8 +86,8 @@ contracts settle Q-01 to Q-06, and the real binary Q-07.
 
 ### Q-06 What does the binary checksum?
 
-- Assumption: the diagnostics as sent, without the checksum the device reported, with the algorithm from
-  capabilities. The service compares the two.
+- Assumption: the diagnostics as sent, with the algorithm from capabilities. The device sends its checksum beside
+  them, in a header, so the bytes checksummed are exactly the bytes sent. The service compares the two.
 - If wrong: only what is passed to the binary changes.
 
 ### Q-07 How is the binary run?

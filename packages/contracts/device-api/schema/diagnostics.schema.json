@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "diagnostics.schema.json",
+  "title": "Diagnostics",
+  "description": "A device's answer to GET /v1/diagnostics, on the port it gives for rest. The Diagnostics-Checksum header carries the checksum of exactly these bytes, in hex, in the algorithm from its health answer. A device may send fields this schema does not know, and the checksum covers them too.",
+  "type": "object",
+  "required": ["hardware", "softwareVersion", "firmwareVersion", "status"],
+  "properties": {
+    "hardware": {
+      "type": "object",
+      "required": ["model", "revision", "serial"],
+      "properties": {
+        "model": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "serial": { "type": "string", "minLength": 1 }
+      }
+    },
+    "softwareVersion": { "type": "string", "minLength": 1 },
+    "firmwareVersion": { "type": "string", "minLength": 1 },
+    "status": {
+      "description": "The device's status in its own words, kept as sent and never interpreted (Q-05).",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

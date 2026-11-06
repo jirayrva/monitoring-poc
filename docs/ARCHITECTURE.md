@@ -20,7 +20,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 | `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory`               |
 | `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | `device-status-datastore-postgres`, `device-status-datastore-in-memory` |
 | `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | `device-health-reader-http`                                             |
-| `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | none yet                                                                |
+| `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | `device-diagnostics-reader-rest`                                        |
 | `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | `checksum-generator-stand-in`                                           |
 
 ## Data concepts
@@ -131,6 +131,9 @@ it knows which answers show a misconfiguration.
 - Health is `GET <baseUrl>/v1/health`, over HTTP or HTTPS, for every device (Q-03). It gives the device's word on its
   health, its ID, its type, the protocols it serves diagnostics in, in its order of preference, and its checksum
   algorithm. Fields the schema does not know go no further.
+- Diagnostics over REST is `GET /v1/diagnostics` on the base URL, with the port the device gives for `rest`. The
+  body is the diagnostics, and the `Diagnostics-Checksum` header their checksum in hex, so the payload checksummed is
+  exactly the body (Q-06). Fields the schema does not know go no further, but the checksum covers them.
 - Bearer auth sends the token from the setting its `secretRef` names (D-38). A token that is not set, or set to
   nothing, is `token_missing`, and the device is not called.
 - A redirect is not followed, and is an `http_error`, so a token never goes to another host.

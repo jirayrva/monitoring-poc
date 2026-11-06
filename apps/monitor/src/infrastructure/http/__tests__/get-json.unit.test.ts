@@ -21,8 +21,26 @@ describe('getJson', () => {
     const result = await call(baseUrl);
 
     // Assert
-    assert.deepEqual(result, { ok: true, value: { httpStatus: 200, document: { status: 'ok' } } });
+    assert.ok(result.ok);
+    assert.equal(result.value.httpStatus, 200);
+    assert.deepEqual(result.value.document, { status: 'ok' });
     assert.partialDeepStrictEqual(headers, { accept: 'application/json', authorization: 'Bearer token' });
+  });
+
+  it('keeps the exact bytes of the answer, and its headers', async (t) => {
+    // Arrange
+    const sent = '{ "status" : "ok",\n  "uptime": 1.50 }';
+    const baseUrl = await startServer(t, (_request, response) => {
+      response.writeHead(200, { 'diagnostics-checksum': 'abc123' }).end(sent);
+    });
+
+    // Act
+    const result = await call(baseUrl);
+
+    // Assert
+    assert.ok(result.ok);
+    assert.deepEqual(result.value.body, new TextEncoder().encode(sent));
+    assert.equal(result.value.headers.get('diagnostics-checksum'), 'abc123');
   });
 
   for (const baseUrl of ['/devices/lobby', '/devices/lobby/']) {

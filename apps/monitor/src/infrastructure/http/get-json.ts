@@ -3,7 +3,7 @@ type GetJsonFailure =
   | { reason: 'gateway_error' | 'http_error' | 'unparsable' | 'too_large'; httpStatus: number };
 
 type GetJsonOutput =
-  | { ok: true; value: { httpStatus: number; document: unknown } }
+  | { ok: true; value: { httpStatus: number; headers: Headers; body: Uint8Array; document: unknown } }
   | { ok: false; failure: GetJsonFailure };
 
 type GetJsonInput = {
@@ -45,7 +45,7 @@ const readBody = async (body: ReadableStream<Uint8Array> | null) => {
     }
     chunks.push(chunk);
   }
-  return Buffer.concat(chunks);
+  return new Uint8Array(Buffer.concat(chunks));
 };
 
 const readAnswer = async (response: Response): Promise<GetJsonOutput> => {
@@ -62,7 +62,8 @@ const readAnswer = async (response: Response): Promise<GetJsonOutput> => {
   }
 
   try {
-    return { ok: true, value: { httpStatus, document: JSON.parse(utf8.decode(body)) } };
+    const { headers } = response;
+    return { ok: true, value: { httpStatus, headers, body, document: JSON.parse(utf8.decode(body)) } };
   } catch {
     return fail({ reason: 'unparsable', httpStatus });
   }
@@ -84,8 +85,8 @@ const toFailure = (signal: AbortSignal, whileReading: boolean) => (error: unknow
 };
 
 /**
- * GETs a JSON answer. A redirect is not followed, and counts as an http_error: a token sent with the call never goes
- * to another host.
+ * GETs a JSON answer, with its headers and the exact bytes it came in. A redirect is not followed, and counts as an
+ * http_error: a token sent with the call never goes to another host.
  */
 const getJson = (input: GetJsonInput): Promise<GetJsonOutput> => {
   const { baseUrl, path, headers, signal } = input;
