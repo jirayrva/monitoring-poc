@@ -1,0 +1,13 @@
+{
+  "name": "Device monitor, local stack",
+  "variables": [
+    {
+      "key": "monitor",
+      "value": "http://127.0.0.1:3000"
+    },
+    {
+      "key": "deviceId",
+      "value": "hoppscotch-switch"
+    }
+  ]
+}

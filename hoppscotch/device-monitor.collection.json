@@ -1,0 +1,124 @@
+{
+  "v": 4,
+  "name": "Device monitor",
+  "folders": [
+    {
+      "v": 4,
+      "name": "Monitor API",
+      "folders": [],
+      "requests": [
+        {
+          "v": "8",
+          "name": "List devices",
+          "method": "GET",
+          "endpoint": "<<monitor>>/v1/devices",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
+          "name": "Register a device",
+          "method": "POST",
+          "endpoint": "<<monitor>>/v1/devices",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 201 or 409\", () => {\n  pw.expect(pw.response.status === 201 || pw.response.status === 409).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"deviceId\": \"<<deviceId>>\",\n  \"name\": \"Hoppscotch switch\",\n  \"baseUrl\": \"http://192.0.2.10:8080\",\n  \"auth\": {\n    \"strategy\": \"none\"\n  }\n}"
+          }
+        },
+        {
+          "v": "8",
+          "name": "Get a device",
+          "method": "GET",
+          "endpoint": "<<monitor>>/v1/devices/<<deviceId>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
+          "name": "Update a device",
+          "method": "PUT",
+          "endpoint": "<<monitor>>/v1/devices/<<deviceId>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"name\": \"Hoppscotch switch, renamed\",\n  \"baseUrl\": \"http://192.0.2.10:8080\",\n  \"auth\": {\n    \"strategy\": \"none\"\n  }\n}"
+          }
+        },
+        {
+          "v": "8",
+          "name": "Unregister a device",
+          "method": "DELETE",
+          "endpoint": "<<monitor>>/v1/devices/<<deviceId>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 204\", () => {\n  pw.expect(pw.response.status === 204).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": []
+    }
+  ],
+  "requests": [],
+  "auth": {
+    "authType": "none",
+    "authActive": true
+  },
+  "headers": []
+}

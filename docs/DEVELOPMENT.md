@@ -44,6 +44,8 @@ From `apps/monitor`, or from the root with `pnpm --filter @device-monitor/monito
 It listens on <http://127.0.0.1:3000> by default, and keeps devices in memory for now. Every setting has a default.
 A wrong one stops the service at startup, with every problem listed (D-48).
 
+To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
+
 | Variable    | Default     | What it sets                                                                   |
 |-------------|-------------|--------------------------------------------------------------------------------|
 | `HOST`      | `127.0.0.1` | Address to listen on. Use `0.0.0.0` to accept connections from other machines. |
