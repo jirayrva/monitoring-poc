@@ -33,6 +33,8 @@ describe('loadConfig', () => {
         downProbeThreshold: 3,
         maxConcurrentProbes: 250,
         healthBudgetMs: 7000,
+        diagnosticsBudgetMs: 7000,
+        checksumTimeoutMs: 2000,
       },
     });
   });

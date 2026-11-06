@@ -74,6 +74,8 @@ To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of i
 | `MONITORING_DOWN_PROBE_THRESHOLD`  | `3`                                                 | Failed probes in a row before `down` (D-28)                              |
 | `MONITORING_MAX_CONCURRENT_PROBES` | `250`                                               | Devices probed at once                                                   |
 | `MONITORING_HEALTH_BUDGET_MS`      | `7000`                                              | Longest health call (D-37)                                               |
+| `MONITORING_DIAGNOSTICS_BUDGET_MS` | `7000`                                              | Longest diagnostics call                                                 |
+| `MONITORING_CHECKSUM_TIMEOUT_MS`   | `2000`                                              | Longest checksum generation. Not retried                                 |
 | `DEVICE_*`                         | —                                                   | Device tokens, each named by a registration's `secretRef` (D-38)         |
 
 ## Layout

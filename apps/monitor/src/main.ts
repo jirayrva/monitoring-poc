@@ -1,4 +1,5 @@
 import { pino } from 'pino';
+import { createChecksumGeneratorStandIn } from './adapters/driven/checksum-generator-stand-in/index.ts';
 import { createDeviceHealthReaderHttp } from './adapters/driven/device-health-reader-http/index.ts';
 import {
   createDeviceDatastorePostgres,
@@ -11,6 +12,7 @@ import {
 import { createApiHttp } from './adapters/driving/api-http/index.ts';
 import { createHeartbeat } from './adapters/driving/heartbeat/index.ts';
 import { config, readDeviceSecret } from './config/index.ts';
+import { probeBudgetMs } from './core/application/device-probes/index.ts';
 import { createApplication } from './core/application/index.ts';
 import { migrateDatabase } from './infrastructure/postgres/migrate.ts';
 
@@ -24,6 +26,9 @@ const { deviceRegistry, deviceStatusQueries, deviceProbes } = createApplication(
   deviceDatastore,
   deviceStatusDatastore,
   deviceHealthReader: createDeviceHealthReaderHttp({ readSecret: readDeviceSecret }),
+  // No diagnostics reader yet, so the monitor speaks none of the devices' protocols.
+  deviceDiagnosticsReaders: [],
+  checksumGenerator: createChecksumGeneratorStandIn(),
   now: () => new Date(),
   policy: config.monitoring,
 });
@@ -31,7 +36,7 @@ const apiHttp = createApiHttp({ deviceRegistry, deviceStatusQueries, config });
 const heartbeat = createHeartbeat({
   deviceProbes,
   logger,
-  config: { intervalMs: config.monitoring.intervalMs, stopTimeoutMs: config.monitoring.healthBudgetMs },
+  config: { intervalMs: config.monitoring.intervalMs, stopTimeoutMs: probeBudgetMs(config.monitoring) },
 });
 
 await apiHttp.start();

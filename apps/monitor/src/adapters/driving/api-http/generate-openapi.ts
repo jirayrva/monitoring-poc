@@ -2,6 +2,7 @@ import { writeFile } from 'node:fs/promises';
 import { openApiPath } from '@device-monitor/contracts/monitor-api';
 import { config } from '../../../config/index.ts';
 import { createApplication } from '../../../core/application/index.ts';
+import { createChecksumGeneratorStandIn } from '../../driven/checksum-generator-stand-in/index.ts';
 import { createDeviceDatastoreInMemory } from '../../driven/device-datastore-in-memory/index.ts';
 import { createDeviceStatusDatastoreInMemory } from '../../driven/device-status-datastore-in-memory/index.ts';
 import { createApiHttp } from './index.ts';
@@ -11,6 +12,8 @@ const application = createApplication({
   deviceDatastore: createDeviceDatastoreInMemory(),
   deviceStatusDatastore: createDeviceStatusDatastoreInMemory(),
   deviceHealthReader: { readHealth: () => Promise.reject(new Error('The API never probes')) },
+  deviceDiagnosticsReaders: [],
+  checksumGenerator: createChecksumGeneratorStandIn(),
   now: () => new Date(),
   policy: config.monitoring,
 });

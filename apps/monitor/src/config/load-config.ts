@@ -58,6 +58,8 @@ const loadConfig = (env: Environment) => {
       downProbeThreshold: read.number('MONITORING_DOWN_PROBE_THRESHOLD', 3, { min: 1, whole: true }),
       maxConcurrentProbes: read.number('MONITORING_MAX_CONCURRENT_PROBES', 250, { min: 1, whole: true }),
       healthBudgetMs: read.number('MONITORING_HEALTH_BUDGET_MS', 7000, { min: 1 }),
+      diagnosticsBudgetMs: read.number('MONITORING_DIAGNOSTICS_BUDGET_MS', 7000, { min: 1 }),
+      checksumTimeoutMs: read.number('MONITORING_CHECKSUM_TIMEOUT_MS', 2000, { min: 1 }),
     },
   };
 

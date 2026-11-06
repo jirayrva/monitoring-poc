@@ -403,13 +403,14 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ## 4 Not doing (yet)
 
-| ID   | Not doing               | Why                                 | Brings it in                                  |
-|------|-------------------------|-------------------------------------|-----------------------------------------------|
-| D-03 | Auth                    | Presenter's laptop only (Q-13)      | After the trade show                          |
-| D-04 | Multiple instances      | One laptop (Q-18, Q-19)             | Too many devices, or an autoscaling cloud     |
-| D-05 | Metrics, tracing        | Logs cover the stand (I-01)         | Real use (trends, alerts), tuning concurrency |
-| D-06 | Rate limiting           | Only the presenter has access       | As D-03                                       |
-| D-07 | Per-device pace         | One pace for all (Q-10)             | Mixed paces, or too many for one round        |
-| D-53 | A state machine library | `nextStatus` already is the diagram | Many more states, or per device type          |
-| D-55 | SSRF guard              | Would block devices on private LANs | As D-03                                       |
-| D-56 | A latest-statuses table | An index serves a thousand devices  | Listing statuses measured too slow            |
+| ID   | Not doing                  | Why                                    | Brings it in                                  |
+|------|----------------------------|----------------------------------------|-----------------------------------------------|
+| D-03 | Auth                       | Presenter's laptop only (Q-13)         | After the trade show                          |
+| D-04 | Multiple instances         | One laptop (Q-18, Q-19)                | Too many devices, or an autoscaling cloud     |
+| D-05 | Metrics, tracing           | Logs cover the stand (I-01)            | Real use (trends, alerts), tuning concurrency |
+| D-06 | Rate limiting              | Only the presenter has access          | As D-03                                       |
+| D-07 | Per-device pace            | One pace for all (Q-10)                | Mixed paces, or too many for one round        |
+| D-53 | A state machine library    | `nextStatus` already is the diagram    | Many more states, or per device type          |
+| D-55 | SSRF guard                 | Would block devices on private LANs    | As D-03                                       |
+| D-56 | A latest-statuses table    | An index serves a thousand devices     | Listing statuses measured too slow            |
+| D-57 | Keep the diagnostics bytes | Checked on arrival, nothing reads them | The binary arrives, or Q-06 is in doubt       |

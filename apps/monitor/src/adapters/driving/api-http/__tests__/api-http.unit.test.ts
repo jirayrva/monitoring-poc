@@ -10,6 +10,7 @@ import { createApplication } from '../../../../core/application/index.ts';
 import type { DeviceStatus } from '../../../../core/domain/device-status.ts';
 import { door, lobby } from '../../../../core/domain/testing/devices.ts';
 import { lobbySuspect } from '../../../../core/domain/testing/statuses.ts';
+import { createChecksumGeneratorStandIn } from '../../../driven/checksum-generator-stand-in/index.ts';
 import type { DeviceDatastore } from '../../../../core/ports/driven/device-datastore.ts';
 import type { CallOptions } from '../../../../core/ports/types.ts';
 import { createDeviceDatastoreInMemory } from '../../../driven/device-datastore-in-memory/index.ts';
@@ -66,6 +67,8 @@ const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, .
     deviceDatastore,
     deviceStatusDatastore,
     deviceHealthReader: { readHealth: () => Promise.reject(new Error('The API never probes')) },
+    deviceDiagnosticsReaders: [],
+    checksumGenerator: createChecksumGeneratorStandIn(),
     now: () => registeredAt,
     policy: loadConfig({}).monitoring,
   });
