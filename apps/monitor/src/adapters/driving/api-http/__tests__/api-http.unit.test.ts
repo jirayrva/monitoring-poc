@@ -5,6 +5,7 @@ import { describe, it } from 'node:test';
 import type { TestContext } from 'node:test';
 import { openApiPath } from '@device-monitor/contracts/monitor-api';
 import { samples } from '@device-monitor/contracts/monitor-api/testing';
+import { loadConfig } from '../../../../config/load-config.ts';
 import { createApplication } from '../../../../core/application/index.ts';
 import type { DeviceStatus } from '../../../../core/domain/device-status.ts';
 import { door, lobby } from '../../../../core/domain/testing/devices.ts';
@@ -61,7 +62,13 @@ const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, .
     await deviceDatastore.insertDevice({ registration, registeredAt }, options);
   }
   const deviceStatusDatastore = createDeviceStatusDatastoreInMemory();
-  const application = createApplication({ deviceDatastore, deviceStatusDatastore, now: () => registeredAt });
+  const application = createApplication({
+    deviceDatastore,
+    deviceStatusDatastore,
+    deviceHealthReader: { readHealth: () => Promise.reject(new Error('The API never probes')) },
+    now: () => registeredAt,
+    policy: loadConfig({}).monitoring,
+  });
   const server = createApiHttp({ ...application, config: { host: '127.0.0.1', port: 0, logLevel: 'silent' } });
   const { url } = await server.start();
   t.after(() => server.stop());

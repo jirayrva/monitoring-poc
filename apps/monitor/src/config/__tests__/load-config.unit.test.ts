@@ -28,6 +28,12 @@ describe('loadConfig', () => {
         connectionTimeoutMs: 5000,
         queryTimeoutMs: 5000,
       },
+      monitoring: {
+        intervalMs: 30_000,
+        downProbeThreshold: 3,
+        maxConcurrentProbes: 250,
+        healthBudgetMs: 7000,
+      },
     });
   });
 
@@ -111,5 +117,21 @@ describe('loadConfig', () => {
 
     // Assert
     assert.deepEqual(problems, ['DATASTORE_URL is not a setting']);
+  });
+
+  it('reports a MONITORING_ variable that is no setting', () => {
+    // Act
+    const problems = problemsOf({ MONITORING_INTERVAL: '1000' });
+
+    // Assert
+    assert.deepEqual(problems, ['MONITORING_INTERVAL is not a setting']);
+  });
+
+  it('reports MONITORING_MAX_CONCURRENT_PROBES=0, as no device would ever be probed', () => {
+    // Act
+    const problems = problemsOf({ MONITORING_MAX_CONCURRENT_PROBES: '0' });
+
+    // Assert
+    assert.deepEqual(problems, ['MONITORING_MAX_CONCURRENT_PROBES must be a whole number of 1 or more, not "0"']);
   });
 });

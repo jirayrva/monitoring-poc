@@ -10,7 +10,9 @@ import { createApiHttp } from './index.ts';
 const application = createApplication({
   deviceDatastore: createDeviceDatastoreInMemory(),
   deviceStatusDatastore: createDeviceStatusDatastoreInMemory(),
+  deviceHealthReader: { readHealth: () => Promise.reject(new Error('The API never probes')) },
   now: () => new Date(),
+  policy: config.monitoring,
 });
 const server = createApiHttp({ ...application, config });
 

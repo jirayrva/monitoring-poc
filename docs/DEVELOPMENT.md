@@ -61,15 +61,20 @@ wrong one stops the service at startup, with every problem listed (D-48).
 
 To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
 
-| Variable                          | Default                                             | What it sets                                                             |
-|-----------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------|
-| `HOST`                            | `127.0.0.1`                                         | Address to listen on. `0.0.0.0` accepts other machines                   |
-| `PORT`                            | `3000`                                              | Port to listen on                                                        |
-| `LOG_LEVEL`                       | `info`                                              | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`           |
-| `DATASTORE_CONNECTION_STRING`     | `postgres://monitor:monitor@127.0.0.1:5432/monitor` | The Postgres to store devices in                                         |
-| `DATASTORE_SCHEMA`                | `monitor`                                           | Schema for the tables and migrations, never `public`. Created if missing |
-| `DATASTORE_CONNECTION_TIMEOUT_MS` | `5000`                                              | Wait for a connection, then 503 `unavailable`                            |
-| `DATASTORE_QUERY_TIMEOUT_MS`      | `5000`                                              | Longest query, then 503 `timeout`                                        |
+| Variable                           | Default                                             | What it sets                                                             |
+|------------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------|
+| `HOST`                             | `127.0.0.1`                                         | Address to listen on. `0.0.0.0` accepts other machines                   |
+| `PORT`                             | `3000`                                              | Port to listen on                                                        |
+| `LOG_LEVEL`                        | `info`                                              | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`           |
+| `DATASTORE_CONNECTION_STRING`      | `postgres://monitor:monitor@127.0.0.1:5432/monitor` | The Postgres to store devices in                                         |
+| `DATASTORE_SCHEMA`                 | `monitor`                                           | Schema for the tables and migrations, never `public`. Created if missing |
+| `DATASTORE_CONNECTION_TIMEOUT_MS`  | `5000`                                              | Wait for a connection, then 503 `unavailable`                            |
+| `DATASTORE_QUERY_TIMEOUT_MS`       | `5000`                                              | Longest query, then 503 `timeout`                                        |
+| `MONITORING_INTERVAL_MS`           | `30000`                                             | Wait between the end of one round and the start of the next (Q-08)       |
+| `MONITORING_DOWN_PROBE_THRESHOLD`  | `3`                                                 | Failed probes in a row before `down` (D-28)                              |
+| `MONITORING_MAX_CONCURRENT_PROBES` | `250`                                               | Devices probed at once                                                   |
+| `MONITORING_HEALTH_BUDGET_MS`      | `7000`                                              | Longest health call (D-37)                                               |
+| `DEVICE_*`                         | —                                                   | Device tokens, each named by a registration's `secretRef` (D-38)         |
 
 ## Layout
 

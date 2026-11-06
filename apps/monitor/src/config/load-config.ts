@@ -4,7 +4,7 @@ import type { Environment, EnvReader } from './env.ts';
 const logLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 
 /** Every variable under these is one of the settings below, so any other is a typo. */
-const settingPrefixes = ['DATASTORE_'];
+const settingPrefixes = ['DATASTORE_', 'MONITORING_'];
 
 /** A plain lowercase SQL identifier, so it needs no quoting in SQL or in a search_path option. */
 const schemaName = /^[a-z_][a-z0-9_]{0,62}$/;
@@ -52,6 +52,12 @@ const loadConfig = (env: Environment) => {
       schema: readDatastoreSchema(read),
       connectionTimeoutMs: read.number('DATASTORE_CONNECTION_TIMEOUT_MS', 5000),
       queryTimeoutMs: read.number('DATASTORE_QUERY_TIMEOUT_MS', 5000),
+    },
+    monitoring: {
+      intervalMs: read.number('MONITORING_INTERVAL_MS', 30_000),
+      downProbeThreshold: read.number('MONITORING_DOWN_PROBE_THRESHOLD', 3, { min: 1, whole: true }),
+      maxConcurrentProbes: read.number('MONITORING_MAX_CONCURRENT_PROBES', 250, { min: 1, whole: true }),
+      healthBudgetMs: read.number('MONITORING_HEALTH_BUDGET_MS', 7000, { min: 1 }),
     },
   };
 
