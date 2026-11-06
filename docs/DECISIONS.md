@@ -388,6 +388,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-47 | Every API path starts with its major version, `/v1`                                     | I-10             |
 | D-48 | Every setting has a default, and a wrong one stops startup with every problem listed    | R-19, I-10       |
 | D-49 | A Hoppscotch collection of the API, to call it by hand and smoke-test a running monitor | R-17             |
+| D-50 | The OpenAPI document comes from the routes, checked in, linted, and served at `/docs/`  | I-10, I-11       |
 
 ## 4 Not doing (yet)
 

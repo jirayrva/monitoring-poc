@@ -19,30 +19,34 @@ pnpm check
 Run `pnpm check` before you commit (D-13). Checks that need services running stay out of it. Root scripts put the verb
 first, as in `test:unit`, so related ones sort together.
 
-| Command                 | What it does                                                         |
-|-------------------------|----------------------------------------------------------------------|
-| `pnpm check`            | Format check, lint, types and unit tests. Pre-push and CI run it too |
-| `pnpm format`           | Applies formatting                                                   |
-| `pnpm format:check`     | Checks formatting                                                    |
-| `pnpm lint`             | Checks linting                                                       |
-| `pnpm lint:fix`         | Applies lint fixes, for you to review                                |
-| `pnpm typecheck`        | Checks types                                                         |
-| `pnpm test`             | Runs all tests                                                       |
-| `pnpm test:unit`        | Runs `*.unit.test.ts`, which need nothing running                    |
-| `pnpm test:integration` | Runs `*.integration.test.ts`, which need the services they talk to   |
-| `pnpm clean`            | Removes every `node_modules` folder                                  |
+| Command                 | What it does                                                                       |
+|-------------------------|------------------------------------------------------------------------------------|
+| `pnpm check`            | Format check, lint, types, OpenAPI lint and unit tests. Pre-push and CI run it too |
+| `pnpm format`           | Applies formatting                                                                 |
+| `pnpm format:check`     | Checks formatting                                                                  |
+| `pnpm lint`             | Checks linting                                                                     |
+| `pnpm lint:fix`         | Applies lint fixes, for you to review                                              |
+| `pnpm lint:openapi`     | Lints the OpenAPI document with Redocly (D-50)                                     |
+| `pnpm typecheck`        | Checks types                                                                       |
+| `pnpm test`             | Runs all tests                                                                     |
+| `pnpm test:unit`        | Runs `*.unit.test.ts`, which need nothing running                                  |
+| `pnpm test:integration` | Runs `*.integration.test.ts`, which need the services they talk to                 |
+| `pnpm clean`            | Removes every `node_modules` folder                                                |
 
 ## Running the monitor
 
 From `apps/monitor`, or from the root with `pnpm --filter @device-monitor/monitor <command>`:
 
-| Command      | What it does                                                                    |
-|--------------|---------------------------------------------------------------------------------|
-| `pnpm dev`   | Runs the service and restarts it when a file changes, with the debugger enabled |
-| `pnpm start` | Runs the service                                                                |
+| Command                 | What it does                                                                    |
+|-------------------------|---------------------------------------------------------------------------------|
+| `pnpm dev`              | Runs the service and restarts it when a file changes, with the debugger enabled |
+| `pnpm start`            | Runs the service                                                                |
+| `pnpm openapi:generate` | Regenerates the OpenAPI document from the routes. A test fails when it's stale  |
 
-It listens on <http://127.0.0.1:3000> by default, and keeps devices in memory for now. Every setting has a default.
-A wrong one stops the service at startup, with every problem listed (D-48).
+It listens on <http://127.0.0.1:3000> by default, and keeps devices in memory for now. The API reference is at
+[`/docs/`](http://127.0.0.1:3000/docs/), and the OpenAPI document at
+[`/docs/openapi.json`](http://127.0.0.1:3000/docs/openapi.json). Every setting has a default. A wrong one stops the
+service at startup, with every problem listed (D-48).
 
 To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
 
@@ -96,8 +100,9 @@ the port has a test file that runs the suite, so every adapter, the fakes includ
 hk runs the hooks, from `hk.pkl` (D-19). Each step calls the root script of the same name, so hooks, CI and you run
 the same thing.
 
-- Pre-commit: formats staged files and stages the result, and lints them. Checks types and runs unit tests when files
-  they cover changed. Unstaged edits are set aside meanwhile, so only what is committed is checked.
+- Pre-commit: formats staged files and stages the result, and lints them. Checks types, lints the OpenAPI document and
+  runs unit tests when files they cover changed. Unstaged edits are set aside meanwhile, so only what is committed is
+  checked.
 - Pre-push and CI: `pnpm check`. GitHub Actions runs it on every pull request and push to `main` (D-20).
   Integration and end-to-end tests join once there is a stack to run them against.
 

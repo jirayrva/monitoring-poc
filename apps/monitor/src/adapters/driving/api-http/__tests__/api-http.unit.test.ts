@@ -1,7 +1,9 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { describe, it } from 'node:test';
 import type { TestContext } from 'node:test';
+import { openApiPath } from '@device-monitor/contracts/monitor-api';
 import { samples } from '@device-monitor/contracts/monitor-api/testing';
 import { createApplication } from '../../../../core/application/index.ts';
 import { door, lobby } from '../../../../core/domain/testing/devices.ts';
@@ -71,6 +73,7 @@ const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, .
         ...(signal ? { signal } : {}),
       }),
     listed: async () => (await fetch(`${url}/v1/devices`)).json(),
+    fetchPath: (path: string) => fetch(`${url}${path}`),
   };
 };
 
@@ -370,4 +373,36 @@ it('returns 404 route_not_found for a route that does not exist', async (t) => {
   // Assert
   assert.equal(response.status, 404);
   assert.deepEqual(await problemOf(response), { ...errorSamples['route-not-found'] });
+});
+
+describe('API documentation', () => {
+  it('serves the OpenAPI document that is checked in', async (t) => {
+    // Arrange
+    const api = await startServer(t);
+    const checkedIn: unknown = JSON.parse(await readFile(openApiPath, 'utf8'));
+
+    // Act
+    const response = await api.fetchPath('/docs/openapi.json');
+
+    // Assert
+    assert.equal(response.status, 200);
+    assert.deepEqual(
+      await response.json(),
+      checkedIn,
+      'openapi.json is out of date: run pnpm --filter @device-monitor/monitor openapi:generate',
+    );
+  });
+
+  it('serves the API reference page', async (t) => {
+    // Arrange
+    const api = await startServer(t);
+
+    // Act
+    const response = await api.fetchPath('/docs/');
+
+    // Assert
+    assert.equal(response.status, 200);
+    assert.match(response.headers.get('content-type') ?? '', /text\/html/);
+    assert.match(await response.text(), /<title>Device Monitor API<\/title>/);
+  });
 });

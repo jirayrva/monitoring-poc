@@ -7,7 +7,12 @@
     "./monitor-api": "./monitor-api/index.ts",
     "./monitor-api/testing": "./monitor-api/testing/samples.ts"
   },
+  "scripts": {
+    "openapi:format": "oxfmt monitor-api/openapi.json",
+    "openapi:lint": "REDOCLY_TELEMETRY=off REDOCLY_SUPPRESS_NOTIFICATIONS=true redocly lint monitor-api/openapi.json"
+  },
   "devDependencies": {
+    "@redocly/cli": "^2.78.0",
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1"
   }

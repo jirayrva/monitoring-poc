@@ -106,10 +106,11 @@ Driven ports, typed in `core/ports/driven/` with the domain model (D-25).
 ## HTTP API
 
 The `api-http` adapter serves the driving ports over HTTP, with Fastify (D-46). The request and response schemas live
-in `packages/contracts/monitor-api`, which clients can use too (D-45).
+in `packages/contracts/monitor-api`, which clients can use too (D-45). The OpenAPI document is generated from the
+routes, and served with an API reference at `/docs/` (D-50).
 
 - Every API path starts with its major version, `/v1`, so a change that breaks clients can come as `/v2` beside it
-  (D-47).
+  (D-47). `/docs` has none: it is for people, not for API clients.
 - Collections are plural nouns: `/v1/devices`, with `/v1/devices/{deviceId}` for one device.
 - An error answers with a `code`, such as `device_not_found`, a `message`, and `details` when there are any, plus the
   HTTP `statusCode` and its `statusName`, such as `NOT_FOUND`, the `requestPath`, the `requestId` and the `timestamp`.

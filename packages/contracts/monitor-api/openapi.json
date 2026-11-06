@@ -1,0 +1,471 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Device Monitor API",
+    "version": "0.0.1"
+  },
+  "components": {
+    "schemas": {
+      "api-error": {
+        "title": "API error",
+        "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message", "details", "statusCode", "statusName", "requestPath", "requestId", "timestamp"],
+        "properties": {
+          "code": {
+            "enum": [
+              "device_exists",
+              "device_not_found",
+              "internal_error",
+              "invalid_request",
+              "route_not_found",
+              "store_unavailable"
+            ]
+          },
+          "message": {
+            "type": "string",
+            "minLength": 1
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "reason": {
+                "type": "string"
+              }
+            }
+          },
+          "statusCode": {
+            "type": "integer",
+            "minimum": 400,
+            "maximum": 599
+          },
+          "statusName": {
+            "description": "The HTTP status's name, in capitals, such as NOT_FOUND.",
+            "type": "string",
+            "pattern": "^[A-Z][A-Z_]*$"
+          },
+          "requestPath": {
+            "description": "The path that was requested, without its query.",
+            "type": "string",
+            "pattern": "^/"
+          },
+          "requestId": {
+            "description": "The request's ID, as logged by the monitor with reqId.",
+            "type": "string",
+            "format": "uuid"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "device-registration": {
+        "title": "Device registration",
+        "description": "A device and how to reach it. Shared by the operations that read or write one.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceId", "name", "baseUrl", "auth"],
+        "properties": {
+          "deviceId": {
+            "description": "Used as a URL path segment, so it can't contain a slash.",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "baseUrl": {
+            "description": "An http or https URL with no credentials in it.",
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https?://[^/?#@]+([/?#].*)?$"
+          },
+          "auth": {
+            "type": "object",
+            "discriminator": {
+              "propertyName": "strategy"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/device-registration-noAuth"
+              },
+              {
+                "$ref": "#/components/schemas/device-registration-bearerAuth"
+              }
+            ]
+          }
+        }
+      },
+      "device-registration-noAuth": {
+        "title": "No auth",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["strategy"],
+        "properties": {
+          "strategy": {
+            "enum": ["none"]
+          }
+        }
+      },
+      "device-registration-bearerAuth": {
+        "title": "Bearer token",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["strategy", "secretRef"],
+        "properties": {
+          "strategy": {
+            "enum": ["bearer"]
+          },
+          "secretRef": {
+            "description": "The name of the variable holding the token, never the token. Limited to DEVICE_ variables so a device can't be pointed at the service's own secrets.",
+            "type": "string",
+            "pattern": "^DEVICE_[A-Z0-9_]+$"
+          }
+        }
+      },
+      "get-device-result": {
+        "title": "Device",
+        "description": "Result of getDevice: one registered device, and how to reach it.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/device-registration"
+          }
+        ]
+      },
+      "list-devices-result": {
+        "title": "List devices",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/device-registration"
+            }
+          }
+        },
+        "description": "Result of listDevices: the registered devices, by ID."
+      },
+      "register-device-command": {
+        "title": "Register device",
+        "description": "Command: the device to register, and how to reach it.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/device-registration"
+          }
+        ]
+      },
+      "register-device-result": {
+        "title": "Registered device",
+        "description": "Result of registerDevice: the device that was registered.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/device-registration"
+          }
+        ]
+      },
+      "update-device-command": {
+        "title": "Update device",
+        "description": "Command: a device's new name, base URL and auth. The ID comes from the URL, and can't be changed.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "baseUrl", "auth"],
+        "properties": {
+          "name": {
+            "$ref": "#/components/schemas/device-registration/properties/name"
+          },
+          "baseUrl": {
+            "$ref": "#/components/schemas/device-registration/properties/baseUrl"
+          },
+          "auth": {
+            "$ref": "#/components/schemas/device-registration/properties/auth"
+          }
+        }
+      },
+      "update-device-result": {
+        "title": "Updated device",
+        "description": "Result of updateDevice: the device with its new name, base URL and auth.",
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/device-registration"
+          }
+        ]
+      }
+    }
+  },
+  "paths": {
+    "/v1/devices": {
+      "get": {
+        "operationId": "listDevices",
+        "summary": "List devices",
+        "description": "Returns every registered device, and how to reach it, ordered by device ID.",
+        "responses": {
+          "200": {
+            "description": "Result of listDevices: the registered devices, by ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/list-devices-result"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "registerDevice",
+        "summary": "Register a device",
+        "description": "Starts monitoring a new device, and returns it with where to find it in the Location header.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/register-device-command"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Result of registerDevice: the device that was registered.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/register-device-result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/devices/{deviceId}": {
+      "get": {
+        "operationId": "getDevice",
+        "summary": "Get a device",
+        "description": "Returns one registered device, and how to reach it.",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/device-registration/properties/deviceId"
+            },
+            "in": "path",
+            "name": "deviceId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Result of getDevice: one registered device, and how to reach it.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/get-device-result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateDevice",
+        "summary": "Update a device",
+        "description": "Replaces a device's name, base URL and auth, and returns the updated device. Its ID can't change.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/update-device-command"
+              }
+            }
+          }
+        },
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/device-registration/properties/deviceId"
+            },
+            "in": "path",
+            "name": "deviceId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Result of updateDevice: the device with its new name, base URL and auth.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/update-device-result"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "unregisterDevice",
+        "summary": "Unregister a device",
+        "description": "Stops monitoring a device. Its history stays, and its ID can be registered again.",
+        "parameters": [
+          {
+            "schema": {
+              "$ref": "#/components/schemas/device-registration/properties/deviceId"
+            },
+            "in": "path",
+            "name": "deviceId",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "The device was unregistered."
+          },
+          "400": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "/",
+      "description": "The server this document came from"
+    }
+  ],
+  "security": []
+}

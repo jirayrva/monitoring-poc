@@ -1,0 +1,7 @@
+# OpenAPI lint rules for `pnpm openapi:lint`, on top of Redocly's recommended set.
+extends:
+  - recommended-strict
+
+rules:
+  # A private service, so there is no license to declare.
+  info-license: off
