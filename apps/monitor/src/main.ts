@@ -1,5 +1,6 @@
 import { pino } from 'pino';
 import { createChecksumGeneratorStandIn } from './adapters/driven/checksum-generator-stand-in/index.ts';
+import { createDeviceDiagnosticsReaderRest } from './adapters/driven/device-diagnostics-reader-rest/index.ts';
 import { createDeviceHealthReaderHttp } from './adapters/driven/device-health-reader-http/index.ts';
 import {
   createDeviceDatastorePostgres,
@@ -26,8 +27,7 @@ const { deviceRegistry, deviceStatusQueries, deviceProbes } = createApplication(
   deviceDatastore,
   deviceStatusDatastore,
   deviceHealthReader: createDeviceHealthReaderHttp({ readSecret: readDeviceSecret }),
-  // No diagnostics reader yet, so the monitor speaks none of the devices' protocols.
-  deviceDiagnosticsReaders: [],
+  deviceDiagnosticsReaders: [createDeviceDiagnosticsReaderRest({ readSecret: readDeviceSecret })],
   checksumGenerator: createChecksumGeneratorStandIn(),
   now: () => new Date(),
   policy: config.monitoring,
