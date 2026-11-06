@@ -285,7 +285,7 @@ One answer showing the registration is wrong is enough (Q-17). It leaves the sta
 - Why: no caller can change stored data through an object it holds, so an in-memory store behaves as Postgres does.
 - Serves: R-17
 
-#### D-53 A device not probed yet is unknown since it was registered, worked out when read
+#### D-54 A device not probed yet is unknown since it was registered, worked out when read
 
 The status store holds only what probes found. Reading the latest statuses gives a registered device with none as
 `unknown` since its `registeredAt`, under its current name.
