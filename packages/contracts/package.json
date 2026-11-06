@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
+    "./device-api": "./device-api/index.ts",
+    "./device-api/testing": "./device-api/testing/samples.ts",
     "./monitor-api": "./monitor-api/index.ts",
     "./monitor-api/testing": "./monitor-api/testing/samples.ts"
   },

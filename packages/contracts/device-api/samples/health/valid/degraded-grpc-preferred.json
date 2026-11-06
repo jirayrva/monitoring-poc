@@ -1,0 +1,10 @@
+{
+  "status": "degraded",
+  "deviceId": "door-ctrl-0021",
+  "deviceType": "door-controller",
+  "protocols": [
+    { "name": "grpc", "version": "1", "port": 50051 },
+    { "name": "rest", "version": "1", "port": 8443 }
+  ],
+  "checksumAlgorithm": "sha256"
+}

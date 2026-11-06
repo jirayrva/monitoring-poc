@@ -1,0 +1,7 @@
+{
+  "status": "adopting",
+  "deviceId": "usw-pro-24-0042",
+  "deviceType": "switch",
+  "protocols": [{ "name": "rest", "version": "1", "port": 443 }],
+  "checksumAlgorithm": "sha256"
+}

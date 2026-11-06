@@ -38,6 +38,9 @@ importers:
       '@scalar/fastify-api-reference':
         specifier: ^1.78.1
         version: 1.78.1
+      ajv:
+        specifier: ^8.20.0
+        version: 8.20.0
       fastify:
         specifier: ^5.12.8
         version: 5.12.8

@@ -19,7 +19,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 | `DeviceProbes`            | driving | Probes every registered device                     | `heartbeat`                                               |
 | `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory` |
 | `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | `device-status-datastore-in-memory`                       |
-| `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | none yet                                                  |
+| `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | `device-health-reader-http`                               |
 | `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | none yet                                                  |
 | `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | none yet                                                  |
 
@@ -120,6 +120,21 @@ routes, and served with an API reference at `/docs/` (D-50).
   The `requestId` is a UUID, and the service logs each request under it as `reqId`, so an error a client reports can
   be found in the log.
 - A store call is aborted only when the client goes away before the response is sent.
+
+## Device API
+
+What the monitor assumes devices answer (Q-01) is a contract in `packages/contracts/device-api`: JSON Schemas, with
+samples. `infrastructure/http/get-json.ts` makes the calls and tells HTTP failures apart. Each reader maps them, as only
+it knows which answers show a misconfiguration.
+
+- Health is `GET <baseUrl>/v1/health`, over HTTP or HTTPS, for every device (Q-03). It gives the device's word on its
+  health, its ID, its type, the protocols it serves diagnostics in, in its order of preference, and its checksum
+  algorithm. Fields the schema does not know go no further.
+- Bearer auth sends the token from the setting its `secretRef` names (D-38). A token that is not set, or set to
+  nothing, is `token_missing`, and the device is not called.
+- A redirect is not followed, and is an `http_error`, so a token never goes to another host.
+- An answer over 1 MiB is not read: `too_large`. A device that floods the monitor holds up no memory.
+- A TLS handshake that fails, such as on a certificate the monitor does not trust, is `tls_failed`.
 
 ## Device states
 

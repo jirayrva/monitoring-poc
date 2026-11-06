@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "health.schema.json",
+  "title": "Health",
+  "description": "A device's answer to GET <baseUrl>/v1/health: its word on its health, its ID and its capabilities. A device may send fields this schema does not know.",
+  "type": "object",
+  "required": ["status", "deviceId", "deviceType", "protocols", "checksumAlgorithm"],
+  "properties": {
+    "status": {
+      "description": "Usually ok, degraded, starting or updating. A device that sends another word still answers.",
+      "type": "string",
+      "minLength": 1
+    },
+    "deviceId": { "type": "string", "minLength": 1 },
+    "deviceType": { "type": "string", "minLength": 1 },
+    "protocols": {
+      "description": "The protocols it serves diagnostics in, in its order of preference. Empty when it serves none.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "version", "port"],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "version": { "type": "string", "minLength": 1 },
+          "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+        }
+      }
+    },
+    "checksumAlgorithm": {
+      "description": "The algorithm of the checksum it reports with its diagnostics, such as sha256.",
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}
