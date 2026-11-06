@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "update-device-command.schema.json",
+  "title": "Update device",
+  "description": "Command: a device's new name, base URL and auth. The ID comes from the URL, and can't be changed.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["name", "baseUrl", "auth"],
+  "properties": {
+    "name": { "$ref": "device-registration.schema.json#/properties/name" },
+    "baseUrl": { "$ref": "device-registration.schema.json#/properties/baseUrl" },
+    "auth": { "$ref": "device-registration.schema.json#/properties/auth" }
+  }
+}

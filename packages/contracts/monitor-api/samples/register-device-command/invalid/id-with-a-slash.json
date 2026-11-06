@@ -1,0 +1,6 @@
+{
+  "deviceId": "lobby/switch",
+  "name": "Lobby switch",
+  "baseUrl": "http://192.0.2.10:8080",
+  "auth": { "strategy": "none" }
+}

@@ -1,0 +1,6 @@
+{
+  "deviceId": "door-ctrl-0021",
+  "name": "Door controller",
+  "baseUrl": "https://door.example.test/api",
+  "auth": { "strategy": "bearer", "secretRef": "DEVICE_DOOR_TOKEN" }
+}

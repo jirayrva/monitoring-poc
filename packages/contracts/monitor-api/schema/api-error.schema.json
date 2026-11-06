@@ -1,0 +1,43 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "api-error.schema.json",
+  "title": "API error",
+  "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["code", "message", "details", "statusCode", "statusName", "requestPath", "requestId", "timestamp"],
+  "properties": {
+    "code": {
+      "enum": [
+        "device_exists",
+        "device_not_found",
+        "internal_error",
+        "invalid_request",
+        "route_not_found",
+        "store_unavailable"
+      ]
+    },
+    "message": { "type": "string", "minLength": 1 },
+    "details": {
+      "type": "object",
+      "properties": { "reason": { "type": "string" } }
+    },
+    "statusCode": { "type": "integer", "minimum": 400, "maximum": 599 },
+    "statusName": {
+      "description": "The HTTP status's name, in capitals, such as NOT_FOUND.",
+      "type": "string",
+      "pattern": "^[A-Z][A-Z_]*$"
+    },
+    "requestPath": {
+      "description": "The path that was requested, without its query.",
+      "type": "string",
+      "pattern": "^/"
+    },
+    "requestId": {
+      "description": "The request's ID, as logged by the monitor with reqId.",
+      "type": "string",
+      "format": "uuid"
+    },
+    "timestamp": { "type": "string", "format": "date-time" }
+  }
+}

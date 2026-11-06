@@ -1,0 +1,69 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "device-registration.schema.json",
+  "title": "Device registration",
+  "description": "A device and how to reach it. Shared by the operations that read or write one.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["deviceId", "name", "baseUrl", "auth"],
+  "properties": {
+    "deviceId": {
+      "description": "Used as a URL path segment, so it can't contain a slash.",
+      "type": "string",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "name": {
+      "type": "string",
+      "minLength": 1
+    },
+    "baseUrl": {
+      "description": "An http or https URL with no credentials in it.",
+      "type": "string",
+      "format": "uri",
+      "pattern": "^https?://[^/?#@]+([/?#].*)?$"
+    },
+    "auth": {
+      "type": "object",
+      "discriminator": {
+        "propertyName": "strategy"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/definitions/noAuth"
+        },
+        {
+          "$ref": "#/definitions/bearerAuth"
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "noAuth": {
+      "title": "No auth",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy"],
+      "properties": {
+        "strategy": {
+          "const": "none"
+        }
+      }
+    },
+    "bearerAuth": {
+      "title": "Bearer token",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy", "secretRef"],
+      "properties": {
+        "strategy": {
+          "const": "bearer"
+        },
+        "secretRef": {
+          "description": "The name of the variable holding the token, never the token. Limited to DEVICE_ variables so a device can't be pointed at the service's own secrets.",
+          "type": "string",
+          "pattern": "^DEVICE_[A-Z0-9_]+$"
+        }
+      }
+    }
+  }
+}

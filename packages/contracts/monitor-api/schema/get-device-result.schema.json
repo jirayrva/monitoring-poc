@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "get-device-result.schema.json",
+  "title": "Device",
+  "description": "Result of getDevice: one registered device, and how to reach it.",
+  "allOf": [{ "$ref": "device-registration.schema.json" }]
+}

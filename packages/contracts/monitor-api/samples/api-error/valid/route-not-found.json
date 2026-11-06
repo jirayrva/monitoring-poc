@@ -1,0 +1,10 @@
+{
+  "code": "route_not_found",
+  "message": "This route does not exist.",
+  "details": {},
+  "statusCode": 404,
+  "statusName": "NOT_FOUND",
+  "requestPath": "/devices",
+  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "timestamp": "2026-11-08T08:13:46.966Z"
+}

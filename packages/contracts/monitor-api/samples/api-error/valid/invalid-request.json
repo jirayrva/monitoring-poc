@@ -1,0 +1,12 @@
+{
+  "code": "invalid_request",
+  "message": "The request is invalid.",
+  "details": {
+    "reason": "body must have required property 'deviceId'"
+  },
+  "statusCode": 400,
+  "statusName": "BAD_REQUEST",
+  "requestPath": "/v1/devices",
+  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "timestamp": "2026-11-08T08:13:46.966Z"
+}

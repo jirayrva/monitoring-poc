@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "list-devices-result.schema.json",
+  "title": "List devices",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data"],
+  "properties": {
+    "data": {
+      "type": "array",
+      "items": {
+        "$ref": "device-registration.schema.json"
+      }
+    }
+  },
+  "description": "Result of listDevices: the registered devices, by ID."
+}

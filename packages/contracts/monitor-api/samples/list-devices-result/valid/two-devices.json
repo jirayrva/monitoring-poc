@@ -1,0 +1,16 @@
+{
+  "data": [
+    {
+      "deviceId": "door-ctrl-0021",
+      "name": "Door controller",
+      "baseUrl": "https://door.example.test/api",
+      "auth": { "strategy": "bearer", "secretRef": "DEVICE_DOOR_TOKEN" }
+    },
+    {
+      "deviceId": "usw-pro-24-0042",
+      "name": "Lobby switch",
+      "baseUrl": "http://192.0.2.10:8080",
+      "auth": { "strategy": "none" }
+    }
+  ]
+}

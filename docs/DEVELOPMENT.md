@@ -37,7 +37,8 @@ first, as in `test:unit`, so related ones sort together.
 One pnpm workspace (D-10):
 
 - `apps/`: what runs. `apps/monitor` is the service.
-- `packages/`: what the apps share.
+- `packages/`: what the apps share. `packages/contracts` holds the APIs' JSON Schemas, each with valid and invalid
+  samples that a test checks against it (D-45).
 - `tooling/`: scripts and checks for the repository itself.
 
 What works together sits together (D-43): tests in `__tests__/` beside the code they test, and a port's contract

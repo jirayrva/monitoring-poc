@@ -333,7 +333,8 @@ A timeout limits one wait, a budget a group of them with their retries. Defaults
 
 #### D-38 Device tokens are referred to, never stored
 
-A device's `auth` names where its token is kept (`secretRef`) (Q-14).
+A device's `auth` names where its token is kept (`secretRef`) (Q-14). The name must start with `DEVICE_`, so a
+registration cannot read the service's own settings.
 
 - Why: the database can be inspected offline (R-13) without exposing device credentials.
 - Serves: R-13
@@ -382,6 +383,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-36 | Jitter spreads a wait within its backoff, never lengthens it                  | R-10, I-07       |
 | D-41 | Port types are named `<Method>Input` and `<Method>Output`                     | I-10             |
 | D-43 | What works together sits together: tests, contract suites, adapter files      | I-10             |
+| D-45 | API bodies are JSON Schemas in `packages/contracts`, with checked samples     | R-17, I-10       |
 
 ## 4 Not doing (yet)
 

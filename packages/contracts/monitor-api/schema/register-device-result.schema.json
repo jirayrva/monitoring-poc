@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "register-device-result.schema.json",
+  "title": "Registered device",
+  "description": "Result of registerDevice: the device that was registered.",
+  "allOf": [{ "$ref": "device-registration.schema.json" }]
+}

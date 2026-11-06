@@ -1,0 +1,10 @@
+{
+  "code": "internal_error",
+  "message": "Something went wrong.",
+  "details": {},
+  "statusCode": 500,
+  "statusName": "INTERNAL_SERVER_ERROR",
+  "requestPath": "/v1/devices",
+  "requestId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+  "timestamp": "2026-11-08T08:13:46.966Z"
+}

@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "update-device-result.schema.json",
+  "title": "Updated device",
+  "description": "Result of updateDevice: the device with its new name, base URL and auth.",
+  "allOf": [{ "$ref": "device-registration.schema.json" }]
+}
