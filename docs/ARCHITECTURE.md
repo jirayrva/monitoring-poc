@@ -16,7 +16,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 | `DeviceRegistry`          | driving | Registers and unregisters devices                  | `api-http`                                                |
 | `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | `api-http`                                                |
 | `Monitoring`              | driving | Starts and stops monitoring                        | none yet                                                  |
-| `DeviceProbes`            | driving | Probes every registered device                     | none yet                                                  |
+| `DeviceProbes`            | driving | Probes every registered device                     | `heartbeat`                                               |
 | `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory` |
 | `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | `device-status-datastore-in-memory`                       |
 | `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | none yet                                                  |
