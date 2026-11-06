@@ -394,10 +394,11 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 
 ## 4 Not doing (yet)
 
-| ID   | Not doing          | Why                            | Brings it in                                  |
-|------|--------------------|--------------------------------|-----------------------------------------------|
-| D-03 | Auth               | Presenter's laptop only (Q-13) | After the trade show                          |
-| D-04 | Multiple instances | One laptop (Q-18, Q-19)        | Too many devices, or an autoscaling cloud     |
-| D-05 | Metrics, tracing   | Logs cover the stand (I-01)    | Real use (trends, alerts), tuning concurrency |
-| D-06 | Rate limiting      | Only the presenter has access  | As D-03                                       |
-| D-07 | Per-device pace    | One pace for all (Q-10)        | Mixed paces, or too many for one round        |
+| ID   | Not doing               | Why                                 | Brings it in                                  |
+|------|-------------------------|-------------------------------------|-----------------------------------------------|
+| D-03 | Auth                    | Presenter's laptop only (Q-13)      | After the trade show                          |
+| D-04 | Multiple instances      | One laptop (Q-18, Q-19)             | Too many devices, or an autoscaling cloud     |
+| D-05 | Metrics, tracing        | Logs cover the stand (I-01)         | Real use (trends, alerts), tuning concurrency |
+| D-06 | Rate limiting           | Only the presenter has access       | As D-03                                       |
+| D-07 | Per-device pace         | One pace for all (Q-10)             | Mixed paces, or too many for one round        |
+| D-53 | A state machine library | `nextStatus` already is the diagram | Many more states, or per device type          |
