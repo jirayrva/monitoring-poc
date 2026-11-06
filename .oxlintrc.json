@@ -31,5 +31,69 @@
         "checkStrictEquality": true
       }
     ]
-  }
+  },
+  "overrides": [
+    // The monitor reads its environment in one place, config/, which checks every setting at
+    // startup. Other apps and scripts read it where they need it.
+    {
+      "files": ["apps/monitor/src/**"],
+      "rules": {
+        "node/no-process-env": "error"
+      }
+    },
+    {
+      "files": ["apps/monitor/src/config/**", "apps/monitor/src/**/__tests__/**", "apps/monitor/src/**/testing/**"],
+      "rules": {
+        "node/no-process-env": "off"
+      }
+    },
+    {
+      "files": ["apps/monitor/src/infrastructure/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["**/core/**", "**/adapters/**", "**/config/**", "**/main.ts"],
+                "message": "infrastructure is technology only: it knows nothing of the core, the adapters or the composition root."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/monitor/src/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "**/adapters/**",
+                  "**/infrastructure/**",
+                  "**/config/**",
+                  "**/main.ts",
+                  "**/samples/**",
+                  "**/schema/**",
+                  "**/migrations/**",
+                  "@device-monitor/contracts",
+                  "pg",
+                  "node-pg-migrate",
+                  "fastify",
+                  "@fastify/*",
+                  "pino",
+                  "ajv",
+                  "@grpc/*"
+                ],
+                "message": "core imports only from core: not adapters, infrastructure, the composition root, contract files, or infrastructure libraries."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

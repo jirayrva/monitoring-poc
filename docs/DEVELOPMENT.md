@@ -36,7 +36,7 @@ first, as in `test:unit`, so related ones sort together.
 
 One pnpm workspace (D-10):
 
-- `apps/`: what runs.
+- `apps/`: what runs. `apps/monitor` is the service.
 - `packages/`: what the apps share.
 - `tooling/`: scripts and checks for the repository itself.
 
