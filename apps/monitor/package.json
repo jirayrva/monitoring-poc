@@ -2,5 +2,9 @@
   "name": "@device-monitor/monitor",
   "version": "0.0.1",
   "private": true,
-  "type": "module"
+  "type": "module",
+  "dependencies": {
+    "@device-monitor/contracts": "workspace:*",
+    "fastify": "^5.12.8"
+  }
 }

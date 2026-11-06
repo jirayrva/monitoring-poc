@@ -384,6 +384,8 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-41 | Port types are named `<Method>Input` and `<Method>Output`                     | I-10             |
 | D-43 | What works together sits together: tests, contract suites, adapter files      | I-10             |
 | D-45 | API bodies are JSON Schemas in `packages/contracts`, with checked samples     | R-17, I-10       |
+| D-46 | Fastify serves the API, validating and serializing with the contract schemas  | I-10             |
+| D-47 | Every API path starts with its major version, `/v1`                           | I-10             |
 
 ## 4 Not doing (yet)
 

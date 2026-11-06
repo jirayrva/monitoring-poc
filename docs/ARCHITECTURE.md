@@ -13,7 +13,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 
 | Port                      | Kind    | What it does                                       | Adapters                     |
 |---------------------------|---------|----------------------------------------------------|------------------------------|
-| `DeviceRegistry`          | driving | Registers and unregisters devices                  | none yet                     |
+| `DeviceRegistry`          | driving | Registers and unregisters devices                  | `api-http`                   |
 | `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | none yet                     |
 | `Monitoring`              | driving | Starts and stops monitoring                        | none yet                     |
 | `DeviceProbes`            | driving | Probes every registered device                     | none yet                     |
@@ -102,6 +102,20 @@ Driven ports, typed in `core/ports/driven/` with the domain model (D-25).
   probe still got the expected response, and its Checksum Result is `unavailable`, with why and the generator.
 - One diagnostics reader per protocol, REST and gRPC, each with the versions it speaks (Q-02).
 - One checksum generator at a time: the vendor's binary, or the stand-in until it arrives (Q-07).
+
+## HTTP API
+
+The `api-http` adapter serves the driving ports over HTTP, with Fastify (D-46). The request and response schemas live
+in `packages/contracts/monitor-api`, which clients can use too (D-45).
+
+- Every API path starts with its major version, `/v1`, so a change that breaks clients can come as `/v2` beside it
+  (D-47).
+- Collections are plural nouns: `/v1/devices`, with `/v1/devices/{deviceId}` for one device.
+- An error answers with a `code`, such as `device_not_found`, a `message`, and `details` when there are any, plus the
+  HTTP `statusCode` and its `statusName`, such as `NOT_FOUND`, the `requestPath`, the `requestId` and the `timestamp`.
+  The `requestId` is a UUID, and the service logs each request under it as `reqId`, so an error a client reports can
+  be found in the log.
+- A store call is aborted only when the client goes away before the response is sent.
 
 ## Device states
 

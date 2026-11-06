@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "exports": {
+    "./monitor-api": "./monitor-api/index.ts",
+    "./monitor-api/testing": "./monitor-api/testing/samples.ts"
+  },
   "devDependencies": {
     "ajv": "^8.20.0",
     "ajv-formats": "^3.0.1"

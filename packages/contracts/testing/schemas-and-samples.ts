@@ -118,4 +118,4 @@ const testSchemasAndSamples = (options: SchemaTestOptions) => {
   });
 };
 
-export { testSchemasAndSamples };
+export { loadSamples, testSchemasAndSamples };
