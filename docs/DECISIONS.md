@@ -362,30 +362,31 @@ A `Result`, `{ ok, value | failure }`, whose failure says why. A throw means a b
 
 Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 
-| ID   | Decision                                                                      | Serves           |
-|------|-------------------------------------------------------------------------------|------------------|
-| D-08 | Node.js 26 (current LTS) and pnpm, pinned by mise                             | R-01, R-18, R-19 |
-| D-09 | TypeScript, run by Node.js as is: no build step, `tsc` only checks            | I-10             |
-| D-10 | One pnpm workspace for every part                                             | R-19, I-10       |
-| D-11 | Node.js's test runner, the kind of test in the file name                      | R-17             |
-| D-12 | Keep a sanity test, as `tsc` and oxlint fail with no files                    | R-17             |
-| D-13 | One command for every quick check: `pnpm check`                               | R-17, I-10       |
-| D-15 | Small commits, in a linear history                                            | I-10             |
-| D-16 | oxfmt formats the code, not Markdown                                          | I-10             |
-| D-17 | oxlint, with types, only checks. Fixes are applied separately, for review     | I-10             |
-| D-18 | One way to write each thing, enforced by lint                                 | I-10             |
-| D-19 | Git hooks with hk, installed by mise                                          | R-17, I-10       |
-| D-20 | CI runs what the pre-push hook runs                                           | R-17             |
-| D-23 | Variants are discriminated unions                                             | I-10             |
-| D-24 | Every call that leaves the process takes an abort signal                      | I-07, I-08       |
-| D-29 | A health word the monitor does not know is kept as `unrecognized`, not failed | R-06, R-10       |
-| D-30 | Devices are listed by ID, in code-point order, the same in every datastore    | R-08             |
-| D-36 | Jitter spreads a wait within its backoff, never lengthens it                  | R-10, I-07       |
-| D-41 | Port types are named `<Method>Input` and `<Method>Output`                     | I-10             |
-| D-43 | What works together sits together: tests, contract suites, adapter files      | I-10             |
-| D-45 | API bodies are JSON Schemas in `packages/contracts`, with checked samples     | R-17, I-10       |
-| D-46 | Fastify serves the API, validating and serializing with the contract schemas  | I-10             |
-| D-47 | Every API path starts with its major version, `/v1`                           | I-10             |
+| ID   | Decision                                                                             | Serves           |
+|------|--------------------------------------------------------------------------------------|------------------|
+| D-08 | Node.js 26 (current LTS) and pnpm, pinned by mise                                    | R-01, R-18, R-19 |
+| D-09 | TypeScript, run by Node.js as is: no build step, `tsc` only checks                   | I-10             |
+| D-10 | One pnpm workspace for every part                                                    | R-19, I-10       |
+| D-11 | Node.js's test runner, the kind of test in the file name                             | R-17             |
+| D-12 | Keep a sanity test, as `tsc` and oxlint fail with no files                           | R-17             |
+| D-13 | One command for every quick check: `pnpm check`                                      | R-17, I-10       |
+| D-15 | Small commits, in a linear history                                                   | I-10             |
+| D-16 | oxfmt formats the code, not Markdown                                                 | I-10             |
+| D-17 | oxlint, with types, only checks. Fixes are applied separately, for review            | I-10             |
+| D-18 | One way to write each thing, enforced by lint                                        | I-10             |
+| D-19 | Git hooks with hk, installed by mise                                                 | R-17, I-10       |
+| D-20 | CI runs what the pre-push hook runs                                                  | R-17             |
+| D-23 | Variants are discriminated unions                                                    | I-10             |
+| D-24 | Every call that leaves the process takes an abort signal                             | I-07, I-08       |
+| D-29 | A health word the monitor does not know is kept as `unrecognized`, not failed        | R-06, R-10       |
+| D-30 | Devices are listed by ID, in code-point order, the same in every datastore           | R-08             |
+| D-36 | Jitter spreads a wait within its backoff, never lengthens it                         | R-10, I-07       |
+| D-41 | Port types are named `<Method>Input` and `<Method>Output`                            | I-10             |
+| D-43 | What works together sits together: tests, contract suites, adapter files             | I-10             |
+| D-45 | API bodies are JSON Schemas in `packages/contracts`, with checked samples            | R-17, I-10       |
+| D-46 | Fastify serves the API, validating and serializing with the contract schemas         | I-10             |
+| D-47 | Every API path starts with its major version, `/v1`                                  | I-10             |
+| D-48 | Every setting has a default, and a wrong one stops startup with every problem listed | R-19, I-10       |
 
 ## 4 Not doing (yet)
 

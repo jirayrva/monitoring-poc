@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "scripts": {
+    "dev": "node --watch --inspect src/main.ts",
+    "start": "node src/main.ts"
+  },
   "dependencies": {
     "@device-monitor/contracts": "workspace:*",
     "fastify": "^5.12.8"

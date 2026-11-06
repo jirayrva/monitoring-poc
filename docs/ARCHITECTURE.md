@@ -6,7 +6,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 - `adapters/driving/`: what calls the core, through the ports it offers.
 - `adapters/driven/`: what the core calls, through the ports it needs.
 - `infrastructure/`: shared technology infra. It imports nothing of the monitor's.
-- `config/`: reads the environment. Nothing else may do so.
+- `config/`: reads the environment, and checks every setting at startup (D-48). Nothing else may read it.
 - `main.ts`: the composition root. It builds the adapters and hands them to the core.
 
 ## Ports

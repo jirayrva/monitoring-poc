@@ -32,6 +32,24 @@ first, as in `test:unit`, so related ones sort together.
 | `pnpm test:integration` | Runs `*.integration.test.ts`, which need the services they talk to   |
 | `pnpm clean`            | Removes every `node_modules` folder                                  |
 
+## Running the monitor
+
+From `apps/monitor`, or from the root with `pnpm --filter @device-monitor/monitor <command>`:
+
+| Command      | What it does                                                                    |
+|--------------|---------------------------------------------------------------------------------|
+| `pnpm dev`   | Runs the service and restarts it when a file changes, with the debugger enabled |
+| `pnpm start` | Runs the service                                                                |
+
+It listens on <http://127.0.0.1:3000> by default, and keeps devices in memory for now. Every setting has a default.
+A wrong one stops the service at startup, with every problem listed (D-48).
+
+| Variable    | Default     | What it sets                                                                   |
+|-------------|-------------|--------------------------------------------------------------------------------|
+| `HOST`      | `127.0.0.1` | Address to listen on. Use `0.0.0.0` to accept connections from other machines. |
+| `PORT`      | `3000`      | Port to listen on                                                              |
+| `LOG_LEVEL` | `info`      | Log level: `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`      |
+
 ## Layout
 
 One pnpm workspace (D-10):
