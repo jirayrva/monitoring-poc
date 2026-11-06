@@ -285,6 +285,15 @@ One answer showing the registration is wrong is enough (Q-17). It leaves the sta
 - Why: no caller can change stored data through an object it holds, so an in-memory store behaves as Postgres does.
 - Serves: R-17
 
+#### D-53 A device not probed yet is unknown since it was registered, worked out when read
+
+The status store holds only what probes found. Reading the latest statuses gives a registered device with none as
+`unknown` since its `registeredAt`, under its current name.
+
+- Why: registering writes one row, so it cannot leave a device without its first status.
+- Then: the device list keeps `registeredAt`. An unregistered device's statuses are left out, and its history stays.
+- Serves: R-08, R-09 · Answers: Q-16
+
 ### Monitoring
 
 #### D-31 Monitoring State lives in memory, and starts as running

@@ -10,6 +10,7 @@ import { door, lobby } from '../../../../core/domain/testing/devices.ts';
 import type { DeviceDatastore } from '../../../../core/ports/driven/device-datastore.ts';
 import type { CallOptions } from '../../../../core/ports/types.ts';
 import { createDeviceDatastoreInMemory } from '../../../driven/device-datastore-in-memory/index.ts';
+import { createDeviceStatusDatastoreInMemory } from '../../../driven/device-status-datastore-in-memory/index.ts';
 import { statusNameOf } from '../error-handlers.ts';
 import { createApiHttp } from '../index.ts';
 
@@ -56,7 +57,11 @@ const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, .
       { signal: new AbortController().signal },
     );
   }
-  const { deviceRegistry } = createApplication({ deviceDatastore, now: () => new Date() });
+  const { deviceRegistry } = createApplication({
+    deviceDatastore,
+    deviceStatusDatastore: createDeviceStatusDatastoreInMemory(),
+    now: () => new Date(),
+  });
   const server = createApiHttp({ deviceRegistry, config: { host: '127.0.0.1', port: 0, logLevel: 'silent' } });
   const { url } = await server.start();
   t.after(() => server.stop());

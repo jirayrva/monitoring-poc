@@ -1,4 +1,4 @@
-import type { Device } from './device.ts';
+import type { Device, RegisteredDevice } from './device.ts';
 import type { DeviceState, DeviceStatus, LastKnown } from './device-status.ts';
 import type { ProbeOutcome } from './probe-outcome.ts';
 
@@ -14,6 +14,13 @@ type NextStatusInput = {
   previous: DeviceStatus;
   outcome: ProbeOutcome;
 };
+
+const registeredStatus = ({ deviceId, name, registeredAt }: RegisteredDevice): DeviceStatus => ({
+  deviceId,
+  name,
+  since: registeredAt,
+  state: 'unknown',
+});
 
 const lastKnownOf = (previous: DeviceStatus): LastKnown | undefined => {
   if (previous.state === 'up') {
@@ -48,5 +55,5 @@ const nextStatus = (input: NextStatusInput, policy: StatusPolicy): ProbedStatus 
   return { deviceId, name, since: sinceFor('suspect'), state: 'suspect', failedProbes, lastProbe: outcome, lastKnown };
 };
 
-export { nextStatus };
+export { nextStatus, registeredStatus };
 export type { NextStatusInput, ProbedStatus, StatusPolicy };
