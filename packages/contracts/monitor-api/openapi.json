@@ -126,6 +126,615 @@
           }
         }
       },
+      "device-status": {
+        "title": "Device status",
+        "description": "The monitor's conclusion about a device, from its probes, with what the device reported kept beside it, as it reported it.",
+        "type": "object",
+        "discriminator": {
+          "propertyName": "state"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/device-status-unknown"
+          },
+          {
+            "$ref": "#/components/schemas/device-status-up"
+          },
+          {
+            "$ref": "#/components/schemas/device-status-suspect"
+          },
+          {
+            "$ref": "#/components/schemas/device-status-down"
+          },
+          {
+            "$ref": "#/components/schemas/device-status-misconfigured"
+          }
+        ]
+      },
+      "device-status-deviceId": {
+        "$ref": "#/components/schemas/device-registration/properties/deviceId"
+      },
+      "device-status-name": {
+        "$ref": "#/components/schemas/device-registration/properties/name"
+      },
+      "device-status-since": {
+        "description": "When the device entered this state: when it was registered, for unknown.",
+        "type": "string",
+        "format": "date-time"
+      },
+      "device-status-unknown": {
+        "title": "Unknown",
+        "description": "Registered, and not probed yet.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceId", "name", "since", "state"],
+        "properties": {
+          "deviceId": {
+            "$ref": "#/components/schemas/device-status-deviceId"
+          },
+          "name": {
+            "$ref": "#/components/schemas/device-status-name"
+          },
+          "since": {
+            "$ref": "#/components/schemas/device-status-since"
+          },
+          "state": {
+            "enum": ["unknown"]
+          }
+        }
+      },
+      "device-status-up": {
+        "title": "Up",
+        "description": "The last probe got the answer it should.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceId", "name", "since", "state", "lastProbe", "health", "capabilities", "diagnostics"],
+        "properties": {
+          "deviceId": {
+            "$ref": "#/components/schemas/device-status-deviceId"
+          },
+          "name": {
+            "$ref": "#/components/schemas/device-status-name"
+          },
+          "since": {
+            "$ref": "#/components/schemas/device-status-since"
+          },
+          "state": {
+            "enum": ["up"]
+          },
+          "lastProbe": {
+            "$ref": "#/components/schemas/device-status-expectedProbe"
+          },
+          "health": {
+            "$ref": "#/components/schemas/device-status-health"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/device-status-capabilities"
+          },
+          "diagnostics": {
+            "$ref": "#/components/schemas/device-status-diagnostics"
+          }
+        }
+      },
+      "device-status-suspect": {
+        "title": "Suspect",
+        "description": "Failing, but not for enough probes in a row to call it down: it may be the network.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceId", "name", "since", "state", "failedProbes", "lastProbe"],
+        "properties": {
+          "deviceId": {
+            "$ref": "#/components/schemas/device-status-deviceId"
+          },
+          "name": {
+            "$ref": "#/components/schemas/device-status-name"
+          },
+          "since": {
+            "$ref": "#/components/schemas/device-status-since"
+          },
+          "state": {
+            "enum": ["suspect"]
+          },
+          "failedProbes": {
+            "description": "Failed probes in a row.",
+            "type": "integer",
+            "minimum": 1
+          },
+          "lastProbe": {
+            "$ref": "#/components/schemas/device-status-failedProbe"
+          },
+          "lastKnown": {
+            "$ref": "#/components/schemas/device-status-lastKnown"
+          }
+        }
+      },
+      "device-status-down": {
+        "title": "Down",
+        "description": "Failed enough probes in a row. lastProbe says whether anything responded.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceId", "name", "since", "state", "lastProbe"],
+        "properties": {
+          "deviceId": {
+            "$ref": "#/components/schemas/device-status-deviceId"
+          },
+          "name": {
+            "$ref": "#/components/schemas/device-status-name"
+          },
+          "since": {
+            "$ref": "#/components/schemas/device-status-since"
+          },
+          "state": {
+            "enum": ["down"]
+          },
+          "lastProbe": {
+            "$ref": "#/components/schemas/device-status-failedProbe"
+          },
+          "lastKnown": {
+            "$ref": "#/components/schemas/device-status-lastKnown"
+          }
+        }
+      },
+      "device-status-misconfigured": {
+        "title": "Misconfigured",
+        "description": "The last answer shows the registration is wrong, not the device. Never counted as down.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceId", "name", "since", "state", "lastProbe"],
+        "properties": {
+          "deviceId": {
+            "$ref": "#/components/schemas/device-status-deviceId"
+          },
+          "name": {
+            "$ref": "#/components/schemas/device-status-name"
+          },
+          "since": {
+            "$ref": "#/components/schemas/device-status-since"
+          },
+          "state": {
+            "enum": ["misconfigured"]
+          },
+          "lastProbe": {
+            "$ref": "#/components/schemas/device-status-misconfiguredProbe"
+          },
+          "lastKnown": {
+            "$ref": "#/components/schemas/device-status-lastKnown"
+          }
+        }
+      },
+      "device-status-probedAt": {
+        "description": "When the probe ran.",
+        "type": "string",
+        "format": "date-time"
+      },
+      "device-status-durationMs": {
+        "description": "How long the probe took, retries included.",
+        "type": "number",
+        "minimum": 0
+      },
+      "device-status-httpStatus": {
+        "type": "integer",
+        "minimum": 100,
+        "maximum": 599
+      },
+      "device-status-expectedProbe": {
+        "title": "Expected probe",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["response", "probedAt", "durationMs"],
+        "properties": {
+          "response": {
+            "enum": ["expected"]
+          },
+          "probedAt": {
+            "$ref": "#/components/schemas/device-status-probedAt"
+          },
+          "durationMs": {
+            "$ref": "#/components/schemas/device-status-durationMs"
+          }
+        }
+      },
+      "device-status-failedProbe": {
+        "title": "Failed probe",
+        "description": "No response, or an unexpected one, and why, with the HTTP status when one came back.",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["response", "reason", "probedAt", "durationMs"],
+            "properties": {
+              "response": {
+                "enum": ["none"]
+              },
+              "reason": {
+                "enum": ["unreachable", "timeout", "cut_off"]
+              },
+              "probedAt": {
+                "$ref": "#/components/schemas/device-status-probedAt"
+              },
+              "durationMs": {
+                "$ref": "#/components/schemas/device-status-durationMs"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["response", "reason", "httpStatus", "probedAt", "durationMs"],
+            "properties": {
+              "response": {
+                "enum": ["none"]
+              },
+              "reason": {
+                "enum": ["gateway_error"]
+              },
+              "httpStatus": {
+                "$ref": "#/components/schemas/device-status-httpStatus"
+              },
+              "probedAt": {
+                "$ref": "#/components/schemas/device-status-probedAt"
+              },
+              "durationMs": {
+                "$ref": "#/components/schemas/device-status-durationMs"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["response", "reason", "httpStatus", "probedAt", "durationMs"],
+            "properties": {
+              "response": {
+                "enum": ["unexpected"]
+              },
+              "reason": {
+                "enum": ["unparsable", "not_a_device_answer", "http_error", "too_large"]
+              },
+              "httpStatus": {
+                "$ref": "#/components/schemas/device-status-httpStatus"
+              },
+              "probedAt": {
+                "$ref": "#/components/schemas/device-status-probedAt"
+              },
+              "durationMs": {
+                "$ref": "#/components/schemas/device-status-durationMs"
+              }
+            }
+          }
+        ]
+      },
+      "device-status-misconfiguredProbe": {
+        "title": "Misconfigured probe",
+        "description": "An answer that shows the registration is wrong, with the HTTP status when one came back.",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["response", "reason", "probedAt", "durationMs"],
+            "properties": {
+              "response": {
+                "enum": ["misconfigured"]
+              },
+              "reason": {
+                "enum": ["token_missing", "tls_failed", "wrong_device"]
+              },
+              "probedAt": {
+                "$ref": "#/components/schemas/device-status-probedAt"
+              },
+              "durationMs": {
+                "$ref": "#/components/schemas/device-status-durationMs"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["response", "reason", "httpStatus", "probedAt", "durationMs"],
+            "properties": {
+              "response": {
+                "enum": ["misconfigured"]
+              },
+              "reason": {
+                "enum": ["auth_failed", "not_found"]
+              },
+              "httpStatus": {
+                "$ref": "#/components/schemas/device-status-httpStatus"
+              },
+              "probedAt": {
+                "$ref": "#/components/schemas/device-status-probedAt"
+              },
+              "durationMs": {
+                "$ref": "#/components/schemas/device-status-durationMs"
+              }
+            }
+          }
+        ]
+      },
+      "device-status-health": {
+        "title": "Health",
+        "description": "What the device says about its own health. A word the monitor does not know is kept, as the device said it.",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state"],
+            "properties": {
+              "state": {
+                "enum": ["ok", "degraded", "starting", "updating"]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "reported"],
+            "properties": {
+              "state": {
+                "enum": ["unrecognized"]
+              },
+              "reported": {
+                "type": "string"
+              }
+            }
+          }
+        ]
+      },
+      "device-status-capabilities": {
+        "title": "Capabilities",
+        "description": "What the device says it is and speaks, in its health answer.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["deviceType", "protocols", "checksumAlgorithm"],
+        "properties": {
+          "deviceType": {
+            "type": "string"
+          },
+          "protocols": {
+            "description": "In the device's order of preference.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["name", "version", "port"],
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "version": {
+                  "type": "string"
+                },
+                "port": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65535
+                }
+              }
+            }
+          },
+          "checksumAlgorithm": {
+            "description": "The algorithm of the checksum it reports.",
+            "type": "string"
+          }
+        }
+      },
+      "device-status-diagnostics": {
+        "title": "Diagnostics",
+        "description": "Diagnostics as one probe read them, or why it could not.",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "reason"],
+            "properties": {
+              "state": {
+                "enum": ["unavailable"]
+              },
+              "reason": {
+                "enum": ["no_supported_protocol"]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "protocol", "reason"],
+            "properties": {
+              "state": {
+                "enum": ["unavailable"]
+              },
+              "protocol": {
+                "enum": ["rest"]
+              },
+              "reason": {
+                "enum": ["unreachable", "timeout", "cut_off", "tls_failed"]
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "protocol", "reason", "httpStatus"],
+            "properties": {
+              "state": {
+                "enum": ["unavailable"]
+              },
+              "protocol": {
+                "enum": ["rest"]
+              },
+              "reason": {
+                "enum": ["gateway_error", "unparsable", "not_a_device_answer", "http_error", "too_large", "auth_failed"]
+              },
+              "httpStatus": {
+                "$ref": "#/components/schemas/device-status-httpStatus"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["state", "protocol", "reason", "grpcStatus"],
+            "properties": {
+              "state": {
+                "enum": ["unavailable"]
+              },
+              "protocol": {
+                "enum": ["grpc"]
+              },
+              "reason": {
+                "enum": [
+                  "unreachable",
+                  "timeout",
+                  "cut_off",
+                  "unparsable",
+                  "not_a_device_answer",
+                  "too_large",
+                  "error_status",
+                  "auth_failed",
+                  "tls_failed"
+                ]
+              },
+              "grpcStatus": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 16
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "state",
+              "protocol",
+              "hardware",
+              "softwareVersion",
+              "firmwareVersion",
+              "reportedStatus",
+              "checksum"
+            ],
+            "properties": {
+              "state": {
+                "enum": ["available"]
+              },
+              "protocol": {
+                "enum": ["rest", "grpc"]
+              },
+              "hardware": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["model", "revision", "serial"],
+                "properties": {
+                  "model": {
+                    "type": "string"
+                  },
+                  "revision": {
+                    "type": "string"
+                  },
+                  "serial": {
+                    "type": "string"
+                  }
+                }
+              },
+              "softwareVersion": {
+                "type": "string"
+              },
+              "firmwareVersion": {
+                "type": "string"
+              },
+              "reportedStatus": {
+                "description": "The status the device reports in its diagnostics, in its own words.",
+                "type": "string"
+              },
+              "checksum": {
+                "$ref": "#/components/schemas/device-status-checksum"
+              }
+            }
+          }
+        ]
+      },
+      "device-status-checksumGenerator": {
+        "description": "What made the checksum: the vendor's binary, or the stand-in used until it arrives.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "version", "standIn"],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "version": {
+            "type": "string"
+          },
+          "standIn": {
+            "type": "boolean"
+          }
+        }
+      },
+      "device-status-checksum": {
+        "title": "Checksum result",
+        "description": "The checksum the device reported, compared with one generated from what it sent.",
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["comparison", "reason", "generator"],
+            "properties": {
+              "comparison": {
+                "enum": ["unavailable"]
+              },
+              "reason": {
+                "enum": ["unsupported_algorithm", "generator_unavailable", "timeout", "failed", "invalid_output"]
+              },
+              "generator": {
+                "$ref": "#/components/schemas/device-status-checksumGenerator"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["comparison", "algorithm", "reported", "computed", "generator"],
+            "properties": {
+              "comparison": {
+                "enum": ["match", "mismatch"]
+              },
+              "algorithm": {
+                "type": "string"
+              },
+              "reported": {
+                "type": "string"
+              },
+              "computed": {
+                "type": "string"
+              },
+              "generator": {
+                "$ref": "#/components/schemas/device-status-checksumGenerator"
+              }
+            }
+          }
+        ]
+      },
+      "device-status-lastKnown": {
+        "title": "Last known",
+        "description": "When the device was last seen giving the expected response, and what it reported then. It may be out of date. Absent if it never was.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["seenAt", "health", "capabilities", "diagnostics"],
+        "properties": {
+          "seenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "health": {
+            "$ref": "#/components/schemas/device-status-health"
+          },
+          "capabilities": {
+            "$ref": "#/components/schemas/device-status-capabilities"
+          },
+          "diagnostics": {
+            "$ref": "#/components/schemas/device-status-diagnostics"
+          }
+        }
+      },
       "get-device-result": {
         "title": "Device",
         "description": "Result of getDevice: one registered device, and how to reach it.",
@@ -149,6 +758,21 @@
           }
         },
         "description": "Result of listDevices: the registered devices, by ID."
+      },
+      "list-latest-statuses-result": {
+        "title": "Latest device statuses",
+        "description": "Result of listLatestStatuses: the latest status of every registered device, by device ID.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["data"],
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/device-status"
+            }
+          }
+        }
       },
       "register-device-command": {
         "title": "Register device",
@@ -443,6 +1067,35 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "The request could not be completed: what went wrong, plus the HTTP status, the path, an ID to find the request in the monitor's log, and when it happened.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/api-error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/device-statuses": {
+      "get": {
+        "operationId": "listLatestStatuses",
+        "summary": "List device statuses",
+        "description": "Returns the latest status of every registered device, ordered by device ID. A device not probed yet is unknown.",
+        "responses": {
+          "200": {
+            "description": "Result of listLatestStatuses: the latest status of every registered device, by device ID.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/list-latest-statuses-result"
                 }
               }
             }

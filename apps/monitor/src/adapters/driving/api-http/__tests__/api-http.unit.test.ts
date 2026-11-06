@@ -6,7 +6,9 @@ import type { TestContext } from 'node:test';
 import { openApiPath } from '@device-monitor/contracts/monitor-api';
 import { samples } from '@device-monitor/contracts/monitor-api/testing';
 import { createApplication } from '../../../../core/application/index.ts';
+import type { DeviceStatus } from '../../../../core/domain/device-status.ts';
 import { door, lobby } from '../../../../core/domain/testing/devices.ts';
+import { lobbySuspect } from '../../../../core/domain/testing/statuses.ts';
 import type { DeviceDatastore } from '../../../../core/ports/driven/device-datastore.ts';
 import type { CallOptions } from '../../../../core/ports/types.ts';
 import { createDeviceDatastoreInMemory } from '../../../driven/device-datastore-in-memory/index.ts';
@@ -50,19 +52,17 @@ const assertInvalidRequest = async (response: Response) => {
 const startServer = async (t: TestContext, ...registrations: (typeof lobby)[]) =>
   startServerOn(t, createDeviceDatastoreInMemory(), ...registrations);
 
+/** When the test servers register a device, as the samples have it. */
+const registeredAt = new Date(Date.UTC(2026, 10, 1, 8));
+
 const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, ...registrations: (typeof lobby)[]) => {
+  const options = { signal: new AbortController().signal };
   for (const registration of registrations) {
-    await deviceDatastore.insertDevice(
-      { registration, registeredAt: new Date() },
-      { signal: new AbortController().signal },
-    );
+    await deviceDatastore.insertDevice({ registration, registeredAt }, options);
   }
-  const { deviceRegistry } = createApplication({
-    deviceDatastore,
-    deviceStatusDatastore: createDeviceStatusDatastoreInMemory(),
-    now: () => new Date(),
-  });
-  const server = createApiHttp({ deviceRegistry, config: { host: '127.0.0.1', port: 0, logLevel: 'silent' } });
+  const deviceStatusDatastore = createDeviceStatusDatastoreInMemory();
+  const application = createApplication({ deviceDatastore, deviceStatusDatastore, now: () => registeredAt });
+  const server = createApiHttp({ ...application, config: { host: '127.0.0.1', port: 0, logLevel: 'silent' } });
   const { url } = await server.start();
   t.after(() => server.stop());
   return {
@@ -79,6 +79,7 @@ const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, .
       }),
     listed: async () => (await fetch(`${url}/v1/devices`)).json(),
     fetchPath: (path: string) => fetch(`${url}${path}`),
+    appendStatus: (status: DeviceStatus) => deviceStatusDatastore.appendStatus({ status }, options),
   };
 };
 
@@ -260,8 +261,36 @@ describe('DELETE /v1/devices/:deviceId', () => {
   });
 });
 
+describe('GET /v1/device-statuses', () => {
+  it('returns an empty list when no device is registered', async (t) => {
+    // Arrange
+    const api = await startServer(t);
+
+    // Act
+    const response = await api.request('GET', '/device-statuses');
+
+    // Assert
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), samples.listLatestStatusesResult.valid.empty);
+  });
+
+  it('returns the latest statuses in the documented format', async (t) => {
+    // Arrange
+    const api = await startServer(t, lobby, door);
+    await api.appendStatus(lobbySuspect);
+
+    // Act
+    const response = await api.request('GET', '/device-statuses');
+
+    // Assert
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), samples.listLatestStatusesResult.valid.mixed);
+  });
+});
+
 const routes: { method: string; path: string; body?: unknown; storeCall: keyof DeviceDatastore }[] = [
   { method: 'GET', path: '/devices', storeCall: 'listDevices' },
+  { method: 'GET', path: '/device-statuses', storeCall: 'listDevices' },
   { method: 'GET', path: `/devices/${lobby.deviceId}`, storeCall: 'getDevice' },
   { method: 'POST', path: '/devices', body: lobby, storeCall: 'insertDevice' },
   {
@@ -352,7 +381,7 @@ describe('every route', () => {
         assert.ok(response.ok, String(response.status));
       });
 
-      if (path !== '/devices') {
+      if (path.includes(lobby.deviceId)) {
         it('returns 400 invalid_request for a device ID the API would never accept', async (t) => {
           // Arrange
           const api = await startServer(t);

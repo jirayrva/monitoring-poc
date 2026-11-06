@@ -7,12 +7,12 @@ import { createDeviceStatusDatastoreInMemory } from '../../driven/device-status-
 import { createApiHttp } from './index.ts';
 
 // The document only depends on the routes: the store is never called and the server never listens.
-const { deviceRegistry } = createApplication({
+const application = createApplication({
   deviceDatastore: createDeviceDatastoreInMemory(),
   deviceStatusDatastore: createDeviceStatusDatastoreInMemory(),
   now: () => new Date(),
 });
-const server = createApiHttp({ deviceRegistry, config });
+const server = createApiHttp({ ...application, config });
 
 await writeFile(openApiPath, `${JSON.stringify(await server.openApi(), undefined, 2)}\n`);
 await server.stop();

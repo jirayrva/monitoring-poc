@@ -1,0 +1,12 @@
+{
+  "deviceId": "usw-pro-24-0042",
+  "name": "Lobby switch",
+  "since": "2026-11-03T09:01:00.000Z",
+  "state": "misconfigured",
+  "lastProbe": {
+    "response": "misconfigured",
+    "reason": "wrong_device",
+    "probedAt": "2026-11-03T09:01:00.000Z",
+    "durationMs": 30
+  }
+}

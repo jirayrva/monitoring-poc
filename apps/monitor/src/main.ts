@@ -11,13 +11,13 @@ import { migrateDatabase } from './infrastructure/postgres/migrate.ts';
 await migrateDatabase({ ...config.datastore, dirs: [deviceDatastoreMigrations] });
 
 const deviceDatastore = createDeviceDatastorePostgres(config.datastore);
-const { deviceRegistry } = createApplication({
+const { deviceRegistry, deviceStatusQueries } = createApplication({
   deviceDatastore,
   // Statuses are kept in memory until their Postgres adapter arrives.
   deviceStatusDatastore: createDeviceStatusDatastoreInMemory(),
   now: () => new Date(),
 });
-const apiHttp = createApiHttp({ deviceRegistry, config });
+const apiHttp = createApiHttp({ deviceRegistry, deviceStatusQueries, config });
 
 await apiHttp.start();
 

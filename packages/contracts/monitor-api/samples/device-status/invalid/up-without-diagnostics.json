@@ -1,0 +1,30 @@
+{
+  "deviceId": "usw-pro-24-0042",
+  "name": "Lobby switch",
+  "since": "2026-11-03T09:00:00.000Z",
+  "state": "up",
+  "lastProbe": {
+    "response": "expected",
+    "probedAt": "2026-11-03T09:10:00.000Z",
+    "durationMs": 42
+  },
+  "health": {
+    "state": "ok"
+  },
+  "capabilities": {
+    "deviceType": "switch",
+    "protocols": [
+      {
+        "name": "grpc",
+        "version": "1",
+        "port": 50051
+      },
+      {
+        "name": "rest",
+        "version": "1",
+        "port": 443
+      }
+    ],
+    "checksumAlgorithm": "sha256"
+  }
+}

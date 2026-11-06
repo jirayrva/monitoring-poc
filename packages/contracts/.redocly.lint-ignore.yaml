@@ -1,5 +1,6 @@
 # Exceptions to the OpenAPI lint rules, one location at a time.
 monitor-api/openapi.json:
-  # GET /v1/devices takes no input and has no failure the client causes, so it has no 4XX response.
+  # These take no input and have no failure the client causes, so they have no 4XX response.
   operation-4xx-response:
     - '#/paths/~1v1~1devices/get/responses'
+    - '#/paths/~1v1~1device-statuses/get/responses'

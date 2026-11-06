@@ -29,6 +29,26 @@
         },
         {
           "v": "8",
+          "name": "List device statuses",
+          "method": "GET",
+          "endpoint": "<<monitor>>/v1/device-statuses",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
           "name": "Register a device",
           "method": "POST",
           "endpoint": "<<monitor>>/v1/devices",

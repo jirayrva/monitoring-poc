@@ -1,0 +1,11 @@
+{
+  "deviceId": "usw-pro-24-0042",
+  "name": "Lobby switch",
+  "since": "2026-11-03T08:55:00.000Z",
+  "state": "unknown",
+  "lastProbe": {
+    "response": "expected",
+    "probedAt": "2026-11-03T09:10:00.000Z",
+    "durationMs": 42
+  }
+}

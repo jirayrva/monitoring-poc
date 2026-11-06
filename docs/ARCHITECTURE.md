@@ -14,7 +14,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 | Port                      | Kind    | What it does                                       | Adapters                                                  |
 |---------------------------|---------|----------------------------------------------------|-----------------------------------------------------------|
 | `DeviceRegistry`          | driving | Registers and unregisters devices                  | `api-http`                                                |
-| `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | none yet                                                  |
+| `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | `api-http`                                                |
 | `Monitoring`              | driving | Starts and stops monitoring                        | none yet                                                  |
 | `DeviceProbes`            | driving | Probes every registered device                     | none yet                                                  |
 | `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory` |
@@ -111,7 +111,10 @@ routes, and served with an API reference at `/docs/` (D-50).
 
 - Every API path starts with its major version, `/v1`, so a change that breaks clients can come as `/v2` beside it
   (D-47). `/docs` has none: it is for people, not for API clients.
-- Collections are plural nouns: `/v1/devices`, with `/v1/devices/{deviceId}` for one device.
+- Collections are plural nouns: `/v1/devices`, with `/v1/devices/{deviceId}` for one device, and `/v1/device-statuses`
+  for the latest status of every device. It is not under `/v1/devices/`, where its name would take a path a device ID
+  could need.
+- Values such as a status's `state` stay lowercase, `up` rather than `ONLINE`.
 - An error answers with a `code`, such as `device_not_found`, a `message`, and `details` when there are any, plus the
   HTTP `statusCode` and its `statusName`, such as `NOT_FOUND`, the `requestPath`, the `requestId` and the `timestamp`.
   The `requestId` is a UUID, and the service logs each request under it as `reqId`, so an error a client reports can

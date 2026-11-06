@@ -1,0 +1,57 @@
+{
+  "deviceId": "usw-pro-24-0042",
+  "name": "Lobby switch",
+  "since": "2026-11-03T09:01:00.000Z",
+  "state": "misconfigured",
+  "lastProbe": {
+    "response": "misconfigured",
+    "reason": "token_missing",
+    "probedAt": "2026-11-03T09:01:00.000Z",
+    "durationMs": 0
+  },
+  "lastKnown": {
+    "seenAt": "2026-11-03T09:10:00.000Z",
+    "health": {
+      "state": "ok"
+    },
+    "capabilities": {
+      "deviceType": "switch",
+      "protocols": [
+        {
+          "name": "grpc",
+          "version": "1",
+          "port": 50051
+        },
+        {
+          "name": "rest",
+          "version": "1",
+          "port": 443
+        }
+      ],
+      "checksumAlgorithm": "sha256"
+    },
+    "diagnostics": {
+      "state": "available",
+      "protocol": "rest",
+      "hardware": {
+        "model": "USW-Pro-24",
+        "revision": "r3",
+        "serial": "F4E2C6A1B9D0"
+      },
+      "softwareVersion": "7.1.4",
+      "firmwareVersion": "7.1.4",
+      "reportedStatus": "ok",
+      "checksum": {
+        "comparison": "match",
+        "algorithm": "sha256",
+        "reported": "9f86d081",
+        "computed": "9f86d081",
+        "generator": {
+          "name": "checksum-stand-in",
+          "version": "0.1.0",
+          "standIn": true
+        }
+      }
+    }
+  }
+}

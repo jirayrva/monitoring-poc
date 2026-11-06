@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "list-latest-statuses-result.schema.json",
+  "title": "Latest device statuses",
+  "description": "Result of listLatestStatuses: the latest status of every registered device, by device ID.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["data"],
+  "properties": {
+    "data": { "type": "array", "items": { "$ref": "device-status.schema.json" } }
+  }
+}

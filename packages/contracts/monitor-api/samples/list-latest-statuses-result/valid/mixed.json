@@ -1,0 +1,44 @@
+{
+  "data": [
+    {
+      "deviceId": "door-ctrl-0021",
+      "name": "Door controller",
+      "since": "2026-11-01T08:00:00.000Z",
+      "state": "unknown"
+    },
+    {
+      "deviceId": "usw-pro-24-0042",
+      "name": "Lobby switch",
+      "since": "2026-11-03T09:01:00.000Z",
+      "state": "suspect",
+      "failedProbes": 1,
+      "lastProbe": {
+        "response": "none",
+        "reason": "timeout",
+        "probedAt": "2026-11-03T09:01:00.000Z",
+        "durationMs": 3000
+      },
+      "lastKnown": {
+        "seenAt": "2026-11-03T09:00:00.000Z",
+        "health": {
+          "state": "ok"
+        },
+        "capabilities": {
+          "deviceType": "switch",
+          "protocols": [
+            {
+              "name": "rest",
+              "version": "1",
+              "port": 443
+            }
+          ],
+          "checksumAlgorithm": "sha256"
+        },
+        "diagnostics": {
+          "state": "unavailable",
+          "reason": "no_supported_protocol"
+        }
+      }
+    }
+  ]
+}
