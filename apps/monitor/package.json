@@ -12,6 +12,11 @@
     "@device-monitor/contracts": "workspace:*",
     "@fastify/swagger": "^9.9.4",
     "@scalar/fastify-api-reference": "^1.78.1",
-    "fastify": "^5.12.8"
+    "fastify": "^5.12.8",
+    "node-pg-migrate": "^9.0.0",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@types/pg": "^8.23.1"
   }
 }

@@ -14,24 +14,35 @@ pnpm install
 pnpm check
 ```
 
+The integration tests need Postgres, and each makes a schema of its own (D-52).
+[Docker](https://docs.docker.com/get-docker/) runs it from `compose.yaml`, on `127.0.0.1:5432`. Set `POSTGRES_PORT`
+to publish it on another port, and point `DATASTORE_CONNECTION_STRING` at it.
+
+```bash
+docker compose up -d --wait
+pnpm test:integration
+```
+
 ## Commands
 
 Run `pnpm check` before you commit (D-13). Checks that need services running stay out of it. Root scripts put the verb
 first, as in `test:unit`, so related ones sort together.
 
-| Command                 | What it does                                                                       |
-|-------------------------|------------------------------------------------------------------------------------|
-| `pnpm check`            | Format check, lint, types, OpenAPI lint and unit tests. Pre-push and CI run it too |
-| `pnpm format`           | Applies formatting                                                                 |
-| `pnpm format:check`     | Checks formatting                                                                  |
-| `pnpm lint`             | Checks linting                                                                     |
-| `pnpm lint:fix`         | Applies lint fixes, for you to review                                              |
-| `pnpm lint:openapi`     | Lints the OpenAPI document with Redocly (D-50)                                     |
-| `pnpm typecheck`        | Checks types                                                                       |
-| `pnpm test`             | Runs all tests                                                                     |
-| `pnpm test:unit`        | Runs `*.unit.test.ts`, which need nothing running                                  |
-| `pnpm test:integration` | Runs `*.integration.test.ts`, which need the services they talk to                 |
-| `pnpm clean`            | Removes every `node_modules` folder                                                |
+| Command                   | What it does                                                                       |
+|---------------------------|------------------------------------------------------------------------------------|
+| `pnpm check`              | Format check, lint, types, OpenAPI lint and unit tests. Pre-push and CI run it too |
+| `pnpm format`             | Applies formatting                                                                 |
+| `pnpm format:check`       | Checks formatting                                                                  |
+| `pnpm lint`               | Checks linting                                                                     |
+| `pnpm lint:fix`           | Applies lint fixes, for you to review                                              |
+| `pnpm lint:openapi`       | Lints the OpenAPI document with Redocly (D-50)                                     |
+| `pnpm typecheck`          | Checks types                                                                       |
+| `pnpm test`               | Runs all tests                                                                     |
+| `pnpm test:unit`          | Runs `*.unit.test.ts`, which need nothing running                                  |
+| `pnpm test:integration`   | Runs `*.integration.test.ts`, which need the services they talk to                 |
+| `pnpm clean:compose`      | Stops Compose and deletes its volumes, so Postgres starts empty next time          |
+| `pnpm clean:dependencies` | Removes every `node_modules` folder                                                |
+| `pnpm clean`              | Both of the above. Run `pnpm install` afterwards                                   |
 
 ## Running the monitor
 
@@ -104,7 +115,7 @@ the same thing.
   runs unit tests when files they cover changed. Unstaged edits are set aside meanwhile, so only what is committed is
   checked.
 - Pre-push and CI: `pnpm check`. GitHub Actions runs it on every pull request and push to `main` (D-20).
-  Integration and end-to-end tests join once there is a stack to run them against.
+- CI then starts Postgres with Compose and runs the integration tests (D-20).
 
 ## Commits
 

@@ -1,0 +1,29 @@
+# Services for local development, tests and CI. Start them with `docker compose up -d --wait`.
+services:
+  postgres:
+    image: postgres:18.6-trixie
+    environment:
+      POSTGRES_USER: monitor
+      POSTGRES_PASSWORD: monitor
+      POSTGRES_DB: monitor
+    ports:
+      # Only on loopback, because the password above is not a secret.
+      - 127.0.0.1:${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    networks:
+      - device-monitor
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready --username=monitor --dbname=monitor']
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+
+volumes:
+  postgres-data:
+
+# Named rather than Compose's default, so every service joins it explicitly. Compose prefixes it with
+# the project name, so a stack under another project, such as the end-to-end tests', gets its own.
+networks:
+  device-monitor:
