@@ -40,6 +40,9 @@ One pnpm workspace (D-10):
 - `packages/`: what the apps share.
 - `tooling/`: scripts and checks for the repository itself.
 
+What works together sits together (D-43): tests in `__tests__/` beside the code they test, and a port's contract
+suite in `testing/` beside the port.
+
 ## Tests
 
 Node's test runner runs them, and the file name says which kind a test is (D-11):
@@ -48,6 +51,10 @@ Node's test runner runs them, and the file name says which kind a test is (D-11)
 - `*.integration.test.ts` need the services they talk to.
 
 `tooling/sanity.unit.test.ts` stays, so the tools always have a file to work on (D-12).
+
+Each port has a contract suite beside it, in `core/ports/<driving|driven>/testing/<port>.contract.ts`. Each adapter of
+the port has a test file that runs the suite, so every adapter, the fakes included, keeps the same promises
+(D-40).
 
 ## Code style
 
@@ -61,6 +68,7 @@ Node's test runner runs them, and the file name says which kind a test is (D-11)
 - Expected failures are returned as a `Result`, `{ ok, value | failure }`. A throw means a bug (D-22).
 - A type with variants is a discriminated union, not optional or nullable fields (D-23).
 - Every call leaving the process takes `CallOptions`, with an abort signal (D-24).
+- Port types are named `<Method>Input` and `<Method>Output` (D-41).
 
 ## Git hooks and CI
 

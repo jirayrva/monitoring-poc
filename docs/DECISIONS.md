@@ -234,6 +234,17 @@ docs, and the reply.
 - Then: the one exception to D-14. Behaviour arrives later, each with its tests.
 - Serves: I-10
 
+#### D-44 Each feature is built from the inside out
+
+First the core behind its driving port, tested with stubs of the driven ports, as the core imports no adapter (D-21).
+Then the driving adapter that exposes it. The real driven adapters come last, each passing its port's contract suite
+(D-40). A fake adapter exists only where something outside the core needs one, such as the API tests.
+
+- Why: the core is written and tested before any database, device or binary exists, and each step builds on tested
+  code.
+- Then: a real adapter is done once it passes the contract suite.
+- Serves: R-17, I-03, I-10
+
 ### Data
 
 #### D-26 A device's identity is kept apart from how to reach it
@@ -268,6 +279,11 @@ One answer showing the registration is wrong is enough (Q-17). It leaves the sta
 - Why: `down` would send staff to a device that may be fine. Asking again gets the same answer, so no debounce (D-28).
 - Then: staff see what to fix, and the next probe after the fix recovers it.
 - Serves: R-11, I-09 · Answers: Q-17
+
+#### D-42 Datastores copy what goes in and comes out
+
+- Why: no caller can change stored data through an object it holds, so an in-memory store behaves as Postgres does.
+- Serves: R-17
 
 ### Monitoring
 
@@ -329,6 +345,12 @@ A `Result`, `{ ok, value | failure }`, whose failure says why. A throw means a b
 - Why: failures are part of a port's contract, and the types make callers handle them.
 - Serves: R-11, I-10
 
+#### D-40 Each port has a contract suite, and each adapter runs it
+
+- Why: a fake and a real adapter keep the same promises, so tests using the fake stay valid.
+- Then: the suite sits beside its port, in `testing/`, and each adapter's test file runs it.
+- Serves: R-17
+
 #### D-14 Add things when they are needed
 
 - Why: nothing is maintained before it earns its place, and each commit shows why what it adds exists.
@@ -358,6 +380,8 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-29 | A health word the monitor does not know is kept as `unrecognized`, not failed | R-06, R-10       |
 | D-30 | Devices are listed by ID, in code-point order, the same in every datastore    | R-08             |
 | D-36 | Jitter spreads a wait within its backoff, never lengthens it                  | R-10, I-07       |
+| D-41 | Port types are named `<Method>Input` and `<Method>Output`                     | I-10             |
+| D-43 | What works together sits together: tests, contract suites, adapter files      | I-10             |
 
 ## 4 Not doing (yet)
 
