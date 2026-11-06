@@ -80,7 +80,7 @@ One driving port per concern, typed in `core/ports/driving/`. The HTTP API drive
 - Device list changes apply from the next round, without a restart (R-09).
 - Monitoring starts `running` with the service, so the demo needs no extra step (D-31).
 
-Driven ports, in `core/ports/driven/`. Each arrives with the first feature that calls it (D-14).
+Driven ports, typed in `core/ports/driven/` with the domain model (D-25).
 
 | Port                      | Operation            | Does                                                | Expected failures       |
 |---------------------------|----------------------|-----------------------------------------------------|-------------------------|
