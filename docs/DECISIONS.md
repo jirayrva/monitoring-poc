@@ -412,3 +412,4 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-07 | Per-device pace         | One pace for all (Q-10)             | Mixed paces, or too many for one round        |
 | D-53 | A state machine library | `nextStatus` already is the diagram | Many more states, or per device type          |
 | D-55 | SSRF guard              | Would block devices on private LANs | As D-03                                       |
+| D-56 | A latest-statuses table | An index serves a thousand devices  | Listing statuses measured too slow            |

@@ -66,7 +66,7 @@ To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of i
 | `HOST`                             | `127.0.0.1`                                         | Address to listen on. `0.0.0.0` accepts other machines                   |
 | `PORT`                             | `3000`                                              | Port to listen on                                                        |
 | `LOG_LEVEL`                        | `info`                                              | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`           |
-| `DATASTORE_CONNECTION_STRING`      | `postgres://monitor:monitor@127.0.0.1:5432/monitor` | The Postgres to store devices in                                         |
+| `DATASTORE_CONNECTION_STRING`      | `postgres://monitor:monitor@127.0.0.1:5432/monitor` | The Postgres to store devices and statuses in                            |
 | `DATASTORE_SCHEMA`                 | `monitor`                                           | Schema for the tables and migrations, never `public`. Created if missing |
 | `DATASTORE_CONNECTION_TIMEOUT_MS`  | `5000`                                              | Wait for a connection, then 503 `unavailable`                            |
 | `DATASTORE_QUERY_TIMEOUT_MS`       | `5000`                                              | Longest query, then 503 `timeout`                                        |

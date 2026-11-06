@@ -11,17 +11,17 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 
 ## Ports
 
-| Port                      | Kind    | What it does                                       | Adapters                                                  |
-|---------------------------|---------|----------------------------------------------------|-----------------------------------------------------------|
-| `DeviceRegistry`          | driving | Registers and unregisters devices                  | `api-http`                                                |
-| `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | `api-http`                                                |
-| `Monitoring`              | driving | Starts and stops monitoring                        | none yet                                                  |
-| `DeviceProbes`            | driving | Probes every registered device                     | `heartbeat`                                               |
-| `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory` |
-| `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | `device-status-datastore-in-memory`                       |
-| `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | `device-health-reader-http`                               |
-| `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | none yet                                                  |
-| `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | none yet                                                  |
+| Port                      | Kind    | What it does                                       | Adapters                                                                |
+|---------------------------|---------|----------------------------------------------------|-------------------------------------------------------------------------|
+| `DeviceRegistry`          | driving | Registers and unregisters devices                  | `api-http`                                                              |
+| `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | `api-http`                                                              |
+| `Monitoring`              | driving | Starts and stops monitoring                        | none yet                                                                |
+| `DeviceProbes`            | driving | Probes every registered device                     | `heartbeat`                                                             |
+| `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory`               |
+| `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | `device-status-datastore-postgres`, `device-status-datastore-in-memory` |
+| `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | `device-health-reader-http`                                             |
+| `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | none yet                                                                |
+| `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | none yet                                                                |
 
 ## Data concepts
 
@@ -209,6 +209,9 @@ left for a retry. A budget is configured, or derived from what it contains.
 | Heartbeat stop      | timeout, derived | the probe budget             |
 
 The service warns at startup when a step's attempts and waits do not fit its budget.
+
+The status a probe leads to is written after it, outside the probe budget: a store call, not a device call. The
+datastore's connection and query timeouts limit it, and stopping the round cancels it.
 
 #### Retry policy
 

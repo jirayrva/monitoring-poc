@@ -4,7 +4,10 @@ import {
   createDeviceDatastorePostgres,
   migrationsDir as deviceDatastoreMigrations,
 } from './adapters/driven/device-datastore-postgres/index.ts';
-import { createDeviceStatusDatastoreInMemory } from './adapters/driven/device-status-datastore-in-memory/index.ts';
+import {
+  createDeviceStatusDatastorePostgres,
+  migrationsDir as deviceStatusDatastoreMigrations,
+} from './adapters/driven/device-status-datastore-postgres/index.ts';
 import { createApiHttp } from './adapters/driving/api-http/index.ts';
 import { createHeartbeat } from './adapters/driving/heartbeat/index.ts';
 import { config, readDeviceSecret } from './config/index.ts';
@@ -13,13 +16,13 @@ import { migrateDatabase } from './infrastructure/postgres/migrate.ts';
 
 const logger = pino({ level: config.logLevel });
 
-await migrateDatabase({ ...config.datastore, dirs: [deviceDatastoreMigrations] });
+await migrateDatabase({ ...config.datastore, dirs: [deviceDatastoreMigrations, deviceStatusDatastoreMigrations] });
 
 const deviceDatastore = createDeviceDatastorePostgres(config.datastore);
+const deviceStatusDatastore = createDeviceStatusDatastorePostgres(config.datastore);
 const { deviceRegistry, deviceStatusQueries, deviceProbes } = createApplication({
   deviceDatastore,
-  // Statuses are kept in memory until their Postgres adapter arrives.
-  deviceStatusDatastore: createDeviceStatusDatastoreInMemory(),
+  deviceStatusDatastore,
   deviceHealthReader: createDeviceHealthReaderHttp({ readSecret: readDeviceSecret }),
   now: () => new Date(),
   policy: config.monitoring,
@@ -39,6 +42,7 @@ const stop = async () => {
   await heartbeat.stop();
   await apiHttp.stop();
   await deviceDatastore[Symbol.asyncDispose]();
+  await deviceStatusDatastore[Symbol.asyncDispose]();
 };
 
 process.once('SIGINT', () => void stop());
