@@ -11,17 +11,17 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 
 ## Ports
 
-| Port                      | Kind    | What it does                                       | Adapters                     |
-|---------------------------|---------|----------------------------------------------------|------------------------------|
-| `DeviceRegistry`          | driving | Registers and unregisters devices                  | `api-http`                   |
-| `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | none yet                     |
-| `Monitoring`              | driving | Starts and stops monitoring                        | none yet                     |
-| `DeviceProbes`            | driving | Probes every registered device                     | none yet                     |
-| `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-in-memory` |
-| `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | none yet                     |
-| `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | none yet                     |
-| `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | none yet                     |
-| `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | none yet                     |
+| Port                      | Kind    | What it does                                       | Adapters                                                  |
+|---------------------------|---------|----------------------------------------------------|-----------------------------------------------------------|
+| `DeviceRegistry`          | driving | Registers and unregisters devices                  | `api-http`                                                |
+| `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | none yet                                                  |
+| `Monitoring`              | driving | Starts and stops monitoring                        | none yet                                                  |
+| `DeviceProbes`            | driving | Probes every registered device                     | none yet                                                  |
+| `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory` |
+| `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | none yet                                                  |
+| `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | none yet                                                  |
+| `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | none yet                                                  |
+| `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | none yet                                                  |
 
 ## Data concepts
 

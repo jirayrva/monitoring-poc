@@ -13,9 +13,11 @@ const describeNumber = ({ min = 0, max, whole = false }: NumberRules) => {
  */
 const createEnvReader = (env: Environment) => {
   const problems: string[] = [];
+  const settings = new Set<string>();
 
   /** An unset or empty variable is not set. */
   const text = (name: string) => {
+    settings.add(name);
     const value = env[name];
     return value === undefined || value === '' ? undefined : value;
   };
@@ -44,9 +46,21 @@ const createEnvReader = (env: Environment) => {
       }
       return parsed;
     },
+    report: (problem: string) => {
+      problems.push(problem);
+    },
+    reportUnknown: (prefixes: string[]) => {
+      for (const name of Object.keys(env)) {
+        if (prefixes.some((prefix) => name.startsWith(prefix)) && !settings.has(name)) {
+          problems.push(`${name} is not a setting`);
+        }
+      }
+    },
     problems: () => [...problems],
   };
 };
 
+type EnvReader = ReturnType<typeof createEnvReader>;
+
 export { createEnvReader };
-export type { Environment };
+export type { Environment, EnvReader };

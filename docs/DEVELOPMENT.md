@@ -54,18 +54,22 @@ From `apps/monitor`, or from the root with `pnpm --filter @device-monitor/monito
 | `pnpm start`            | Runs the service                                                                |
 | `pnpm openapi:generate` | Regenerates the OpenAPI document from the routes. A test fails when it's stale  |
 
-It listens on <http://127.0.0.1:3000> by default, and keeps devices in memory for now. The API reference is at
-[`/docs/`](http://127.0.0.1:3000/docs/), and the OpenAPI document at
-[`/docs/openapi.json`](http://127.0.0.1:3000/docs/openapi.json). Every setting has a default. A wrong one stops the
-service at startup, with every problem listed (D-48).
+It needs Postgres (see [Setup](#setup)), and applies any pending migrations when it starts (D-51). It listens on
+<http://127.0.0.1:3000> by default. The API reference is at [`/docs/`](http://127.0.0.1:3000/docs/), and the
+OpenAPI document at [`/docs/openapi.json`](http://127.0.0.1:3000/docs/openapi.json). Every setting has a default. A
+wrong one stops the service at startup, with every problem listed (D-48).
 
 To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
 
-| Variable    | Default     | What it sets                                                                   |
-|-------------|-------------|--------------------------------------------------------------------------------|
-| `HOST`      | `127.0.0.1` | Address to listen on. Use `0.0.0.0` to accept connections from other machines. |
-| `PORT`      | `3000`      | Port to listen on                                                              |
-| `LOG_LEVEL` | `info`      | Log level: `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`      |
+| Variable                          | Default                                             | What it sets                                                             |
+|-----------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------|
+| `HOST`                            | `127.0.0.1`                                         | Address to listen on. `0.0.0.0` accepts other machines                   |
+| `PORT`                            | `3000`                                              | Port to listen on                                                        |
+| `LOG_LEVEL`                       | `info`                                              | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`           |
+| `DATASTORE_CONNECTION_STRING`     | `postgres://monitor:monitor@127.0.0.1:5432/monitor` | The Postgres to store devices in                                         |
+| `DATASTORE_SCHEMA`                | `monitor`                                           | Schema for the tables and migrations, never `public`. Created if missing |
+| `DATASTORE_CONNECTION_TIMEOUT_MS` | `5000`                                              | Wait for a connection, then 503 `unavailable`                            |
+| `DATASTORE_QUERY_TIMEOUT_MS`      | `5000`                                              | Longest query, then 503 `timeout`                                        |
 
 ## Layout
 

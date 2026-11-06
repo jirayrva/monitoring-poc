@@ -18,15 +18,36 @@ describe('loadConfig', () => {
     const config = loadConfig({});
 
     // Assert
-    assert.deepEqual(config, { host: '127.0.0.1', port: 3000, logLevel: 'info' });
+    assert.deepEqual(config, {
+      host: '127.0.0.1',
+      port: 3000,
+      logLevel: 'info',
+      datastore: {
+        connectionString: 'postgres://monitor:monitor@127.0.0.1:5432/monitor',
+        schema: 'monitor',
+        connectionTimeoutMs: 5000,
+        queryTimeoutMs: 5000,
+      },
+    });
   });
 
   it('takes the settings that are set', () => {
     // Act
-    const config = loadConfig({ HOST: '0.0.0.0', PORT: '8080', LOG_LEVEL: 'debug' });
+    const config = loadConfig({
+      HOST: '0.0.0.0',
+      PORT: '8080',
+      LOG_LEVEL: 'debug',
+      DATASTORE_SCHEMA: 'fleet',
+      DATASTORE_QUERY_TIMEOUT_MS: '1000',
+    });
 
     // Assert
-    assert.deepEqual(config, { host: '0.0.0.0', port: 8080, logLevel: 'debug' });
+    assert.partialDeepStrictEqual(config, {
+      host: '0.0.0.0',
+      port: 8080,
+      logLevel: 'debug',
+      datastore: { schema: 'fleet', queryTimeoutMs: 1000 },
+    });
   });
 
   it('treats an empty setting as not set', () => {
@@ -57,4 +78,38 @@ describe('loadConfig', () => {
       assert.deepEqual(problems, [`PORT must be a whole number from 0 to 65535, not "${value}"`]);
     });
   }
+
+  it('reports DATASTORE_CONNECTION_TIMEOUT_MS=soon', () => {
+    // Act
+    const problems = problemsOf({ DATASTORE_CONNECTION_TIMEOUT_MS: 'soon' });
+
+    // Assert
+    assert.deepEqual(problems, ['DATASTORE_CONNECTION_TIMEOUT_MS must be a number of 0 or more, not "soon"']);
+  });
+
+  it('reports DATASTORE_SCHEMA=public, so the service never keeps its tables there', () => {
+    // Act
+    const problems = problemsOf({ DATASTORE_SCHEMA: 'public' });
+
+    // Assert
+    assert.deepEqual(problems, ['DATASTORE_SCHEMA must not be public']);
+  });
+
+  it('reports a DATASTORE_SCHEMA that would need quoting, since it goes into the search_path', () => {
+    // Act
+    const problems = problemsOf({ DATASTORE_SCHEMA: 'fleet; drop' });
+
+    // Assert
+    assert.deepEqual(problems, [
+      'DATASTORE_SCHEMA must be lowercase letters, digits and underscores, not "fleet; drop"',
+    ]);
+  });
+
+  it('reports a DATASTORE_ variable that is no setting, so a typo does not pass as a default', () => {
+    // Act
+    const problems = problemsOf({ DATASTORE_URL: 'postgres://db' });
+
+    // Assert
+    assert.deepEqual(problems, ['DATASTORE_URL is not a setting']);
+  });
 });

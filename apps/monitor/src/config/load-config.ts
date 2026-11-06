@@ -1,7 +1,34 @@
 import { createEnvReader } from './env.ts';
-import type { Environment } from './env.ts';
+import type { Environment, EnvReader } from './env.ts';
 
 const logLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
+
+/** Every variable under these is one of the settings below, so any other is a typo. */
+const settingPrefixes = ['DATASTORE_'];
+
+/** A plain lowercase SQL identifier, so it needs no quoting in SQL or in a search_path option. */
+const schemaName = /^[a-z_][a-z0-9_]{0,62}$/;
+
+/**
+ * The schema that holds the service's tables. Never public: the service keeps its tables, and the history of its
+ * migrations, apart from whatever else the database holds.
+ */
+const readDatastoreSchema = (read: EnvReader) => {
+  const fallback = 'monitor';
+  const value = read.text('DATASTORE_SCHEMA');
+  if (value === undefined) {
+    return fallback;
+  }
+  if (!schemaName.test(value)) {
+    read.report(`DATASTORE_SCHEMA must be lowercase letters, digits and underscores, not "${value}"`);
+    return fallback;
+  }
+  if (value === 'public') {
+    read.report('DATASTORE_SCHEMA must not be public');
+    return fallback;
+  }
+  return value;
+};
 
 class ConfigError extends Error {
   readonly problems: string[];
@@ -20,8 +47,15 @@ const loadConfig = (env: Environment) => {
     host: read.text('HOST') ?? '127.0.0.1',
     port: read.number('PORT', 3000, { whole: true, max: 65_535 }),
     logLevel: read.oneOf('LOG_LEVEL', logLevels, 'info'),
+    datastore: {
+      connectionString: read.text('DATASTORE_CONNECTION_STRING') ?? 'postgres://monitor:monitor@127.0.0.1:5432/monitor',
+      schema: readDatastoreSchema(read),
+      connectionTimeoutMs: read.number('DATASTORE_CONNECTION_TIMEOUT_MS', 5000),
+      queryTimeoutMs: read.number('DATASTORE_QUERY_TIMEOUT_MS', 5000),
+    },
   };
 
+  read.reportUnknown(settingPrefixes);
   const problems = read.problems();
   if (problems.length > 0) {
     throw new ConfigError(problems);
