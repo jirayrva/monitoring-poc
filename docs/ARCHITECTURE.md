@@ -21,7 +21,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 | `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | `device-status-datastore-postgres`, `device-status-datastore-in-memory` |
 | `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | `device-health-reader-http`                                             |
 | `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | `device-diagnostics-reader-rest`                                        |
-| `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | `checksum-generator-stand-in`                                           |
+| `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | `checksum-generator-process`, `checksum-generator-stand-in`             |
 
 ## Data concepts
 
@@ -103,6 +103,9 @@ Driven ports, typed in `core/ports/driven/` with the domain model (D-25).
 - One diagnostics reader per protocol, REST and gRPC, each with the versions it speaks (Q-02).
 - One checksum generator at a time: the vendor's binary, or the stand-in until it arrives (Q-07). The stand-in hashes with
   Node's crypto, in any algorithm Node knows, and every result names it as a stand-in.
+- The binary runs once per checksum, with no shell: the payload on its stdin, the checksum in hex on its stdout
+  (Q-07). It sees only the environment it is configured with, and is killed when its time ends. `{algorithm}` in its
+  arguments names the algorithm, and one it does not list is `unsupported_algorithm`, without running it (D-58).
 
 ## HTTP API
 
