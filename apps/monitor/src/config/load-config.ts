@@ -1,10 +1,11 @@
+import { readChecksumGenerator } from './checksum-generator.ts';
 import { createEnvReader } from './env.ts';
 import type { Environment, EnvReader } from './env.ts';
 
 const logLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 
 /** Every variable under these is one of the settings below, so any other is a typo. */
-const settingPrefixes = ['DATASTORE_', 'MONITORING_'];
+const settingPrefixes = ['CHECKSUM_', 'DATASTORE_', 'MONITORING_'];
 
 /** A plain lowercase SQL identifier, so it needs no quoting in SQL or in a search_path option. */
 const schemaName = /^[a-z_][a-z0-9_]{0,62}$/;
@@ -61,6 +62,7 @@ const loadConfig = (env: Environment) => {
       diagnosticsBudgetMs: read.number('MONITORING_DIAGNOSTICS_BUDGET_MS', 7000, { min: 1 }),
       checksumTimeoutMs: read.number('MONITORING_CHECKSUM_TIMEOUT_MS', 2000, { min: 1 }),
     },
+    checksumGenerator: readChecksumGenerator(read, env),
   };
 
   read.reportUnknown(settingPrefixes);

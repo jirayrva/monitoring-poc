@@ -36,6 +36,7 @@ describe('loadConfig', () => {
         diagnosticsBudgetMs: 7000,
         checksumTimeoutMs: 2000,
       },
+      checksumGenerator: { kind: 'stand-in' },
     });
   });
 
@@ -135,5 +136,127 @@ describe('loadConfig', () => {
 
     // Assert
     assert.deepEqual(problems, ['MONITORING_MAX_CONCURRENT_PROBES must be a whole number of 1 or more, not "0"']);
+  });
+  describe('checksum generator', () => {
+    // Any executable file will do: loadConfig only checks that it can be run.
+    const binary = process.execPath;
+
+    it('runs the binary with its arguments, algorithms, version, and CHECKSUM_ENV_<NAME> as <NAME>', () => {
+      // Act
+      const config = loadConfig({
+        CHECKSUM_BINARY_PATH: binary,
+        CHECKSUM_BINARY_ARGS: '["--algo", "{algorithm}", "--config", "/opt/vendor/my checksum.conf"]',
+        CHECKSUM_BINARY_ALGORITHMS: 'sha256, md5',
+        CHECKSUM_BINARY_VERSION: '1.2.0',
+        CHECKSUM_ENV_LICENSE_KEY: 'abc',
+        PATH: '/usr/bin',
+      });
+
+      // Assert
+      assert.deepEqual(config.checksumGenerator, {
+        kind: 'binary',
+        path: binary,
+        args: ['--algo', '{algorithm}', '--config', '/opt/vendor/my checksum.conf'],
+        algorithms: ['sha256', 'md5'],
+        version: '1.2.0',
+        env: { LICENSE_KEY: 'abc' },
+      });
+    });
+
+    it('names the version unknown when it is not set', () => {
+      // Act
+      const config = loadConfig({ CHECKSUM_BINARY_PATH: binary, CHECKSUM_BINARY_ALGORITHMS: 'sha256' });
+
+      // Assert
+      assert.partialDeepStrictEqual(config.checksumGenerator, { version: 'unknown', args: [], env: {} });
+    });
+
+    const badPaths: [why: string, path: string, problem: string][] = [
+      ['relative', 'bin/checksum', 'CHECKSUM_BINARY_PATH must be an absolute path, not "bin/checksum"'],
+      ['missing', '/no/such/binary', 'CHECKSUM_BINARY_PATH must be an executable file, and "/no/such/binary" is not'],
+      [
+        'not executable',
+        import.meta.filename,
+        `CHECKSUM_BINARY_PATH must be an executable file, and "${import.meta.filename}" is not`,
+      ],
+      [
+        'a directory',
+        import.meta.dirname,
+        `CHECKSUM_BINARY_PATH must be an executable file, and "${import.meta.dirname}" is not`,
+      ],
+    ];
+    for (const [why, path, problem] of badPaths) {
+      it(`reports a CHECKSUM_BINARY_PATH that is ${why}, so the service never starts with a binary it cannot run`, () => {
+        // Act
+        const problems = problemsOf({ CHECKSUM_BINARY_PATH: path, CHECKSUM_BINARY_ALGORITHMS: 'sha256' });
+
+        // Assert
+        assert.deepEqual(problems, [problem]);
+      });
+    }
+
+    it('reports a binary with no algorithms, as it would never be run', () => {
+      // Act
+      const problems = problemsOf({ CHECKSUM_BINARY_PATH: binary, CHECKSUM_BINARY_ALGORITHMS: ' , ' });
+
+      // Assert
+      assert.deepEqual(problems, [
+        'CHECKSUM_BINARY_ALGORITHMS must list the algorithms the binary supports, such as sha256,md5',
+      ]);
+    });
+
+    for (const value of ['--algo sha256', '"--algo"', '[1, 2]', '{"algo": "sha256"}']) {
+      it(`reports CHECKSUM_BINARY_ARGS that is not a JSON array of strings: ${value}`, () => {
+        // Act
+        const problems = problemsOf({
+          CHECKSUM_BINARY_PATH: binary,
+          CHECKSUM_BINARY_ALGORITHMS: 'sha256',
+          CHECKSUM_BINARY_ARGS: value,
+        });
+
+        // Assert
+        assert.deepEqual(problems, [
+          `CHECKSUM_BINARY_ARGS must be a JSON array of strings, such as ["--algo", "{algorithm}"], not ${value}`,
+        ]);
+      });
+    }
+
+    it('reports CHECKSUM_ENV_ with no name after it', () => {
+      // Act
+      const problems = problemsOf({
+        CHECKSUM_BINARY_PATH: binary,
+        CHECKSUM_BINARY_ALGORITHMS: 'sha256',
+        CHECKSUM_ENV_: 'x',
+      });
+
+      // Assert
+      assert.deepEqual(problems, ['CHECKSUM_ENV_ must be followed by the name of a variable for the binary']);
+    });
+
+    it('reports a setting for the binary without one, so a mistake does not pass unnoticed', () => {
+      // Act
+      const problems = problemsOf({
+        CHECKSUM_BINARY_ARGS: '["-v"]',
+        CHECKSUM_BINARY_ALGORITHMS: 'sha256',
+        CHECKSUM_BINARY_VERSION: '1.2.0',
+        CHECKSUM_ENV_LICENSE_KEY: 'abc',
+      });
+
+      // Assert
+      assert.deepEqual(problems, [
+        'CHECKSUM_BINARY_ARGS applies only with CHECKSUM_BINARY_PATH',
+        'CHECKSUM_BINARY_ALGORITHMS applies only with CHECKSUM_BINARY_PATH',
+        'CHECKSUM_BINARY_VERSION applies only with CHECKSUM_BINARY_PATH',
+        'CHECKSUM_ENV_LICENSE_KEY applies only with CHECKSUM_BINARY_PATH',
+      ]);
+    });
+
+    it('reports a CHECKSUM_ variable that is no setting', () => {
+      // Act
+      const problems = problemsOf({ CHECKSUM_BINARY: '/opt/vendor/checksum' });
+
+      // Assert
+      assert.deepEqual(problems, ['CHECKSUM_BINARY is not a setting']);
+    });
   });
 });

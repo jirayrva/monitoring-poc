@@ -57,7 +57,8 @@ From `apps/monitor`, or from the root with `pnpm --filter @device-monitor/monito
 It needs Postgres (see [Setup](#setup)), and applies any pending migrations when it starts (D-51). It listens on
 <http://127.0.0.1:3000> by default. The API reference is at [`/docs/`](http://127.0.0.1:3000/docs/), and the
 OpenAPI document at [`/docs/openapi.json`](http://127.0.0.1:3000/docs/openapi.json). Every setting has a default. A
-wrong one stops the service at startup, with every problem listed (D-48).
+wrong one stops the service at startup, with every problem listed (D-48), as does a checksum binary it cannot run, or
+a setting for one without it.
 
 To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
 
@@ -76,6 +77,11 @@ To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of i
 | `MONITORING_HEALTH_BUDGET_MS`      | `7000`                                              | Longest health call (D-37)                                               |
 | `MONITORING_DIAGNOSTICS_BUDGET_MS` | `7000`                                              | Longest diagnostics call                                                 |
 | `MONITORING_CHECKSUM_TIMEOUT_MS`   | `2000`                                              | Longest checksum generation. Not retried                                 |
+| `CHECKSUM_BINARY_PATH`             | —                                                   | The checksum binary, as an absolute path. Unset: the stand-in (Q-07)     |
+| `CHECKSUM_BINARY_ARGS`             | `[]`                                                | Its arguments, as a JSON array. `{algorithm}` names the algorithm (D-58) |
+| `CHECKSUM_BINARY_ALGORITHMS`       | —                                                   | The algorithms it supports, comma-separated. Required with a binary      |
+| `CHECKSUM_BINARY_VERSION`          | `unknown`                                           | Its version, named with every checksum                                   |
+| `CHECKSUM_ENV_*`                   | —                                                   | `CHECKSUM_ENV_<NAME>` is `<NAME>` in its environment, its only variables |
 | `DEVICE_*`                         | —                                                   | Device tokens, each named by a registration's `secretRef` (D-38)         |
 
 ## Layout

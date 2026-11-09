@@ -1,4 +1,5 @@
 import { pino } from 'pino';
+import { createChecksumGeneratorProcess } from './adapters/driven/checksum-generator-process/index.ts';
 import { createChecksumGeneratorStandIn } from './adapters/driven/checksum-generator-stand-in/index.ts';
 import { createDeviceDiagnosticsReaderRest } from './adapters/driven/device-diagnostics-reader-rest/index.ts';
 import { createDeviceHealthReaderHttp } from './adapters/driven/device-health-reader-http/index.ts';
@@ -19,6 +20,11 @@ import { migrateDatabase } from './infrastructure/postgres/migrate.ts';
 
 const logger = pino({ level: config.logLevel });
 
+const checksumGenerator =
+  config.checksumGenerator.kind === 'binary'
+    ? createChecksumGeneratorProcess(config.checksumGenerator)
+    : createChecksumGeneratorStandIn();
+
 await migrateDatabase({ ...config.datastore, dirs: [deviceDatastoreMigrations, deviceStatusDatastoreMigrations] });
 
 const deviceDatastore = createDeviceDatastorePostgres(config.datastore);
@@ -28,7 +34,7 @@ const { deviceRegistry, deviceStatusQueries, deviceProbes } = createApplication(
   deviceStatusDatastore,
   deviceHealthReader: createDeviceHealthReaderHttp({ readSecret: readDeviceSecret }),
   deviceDiagnosticsReaders: [createDeviceDiagnosticsReaderRest({ readSecret: readDeviceSecret })],
-  checksumGenerator: createChecksumGeneratorStandIn(),
+  checksumGenerator,
   now: () => new Date(),
   policy: config.monitoring,
 });
