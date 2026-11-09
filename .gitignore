@@ -3,3 +3,10 @@
 
 # Node.js
 node_modules/
+
+# Device tokens for Compose
+.env.devices
+
+# The vendor's checksum binary and its settings, which compose.yaml mounts from vendor/. Not ours to publish.
+vendor/*
+!vendor/.gitkeep

@@ -116,7 +116,9 @@ in `packages/contracts/monitor-api`, which clients can use too (D-45). The OpenA
 routes, and served with an API reference at `/docs/` (D-50).
 
 - Every API path starts with its major version, `/v1`, so a change that breaks clients can come as `/v2` beside it
-  (D-47). `/docs` has none: it is for people, not for API clients.
+  (D-47). `/docs` and `/livez` have none: one is for people, the other for the container's healthcheck. `/livez`
+  answers while the service can serve requests, and never asks a store, so a database outage does not make the
+  service look dead.
 - Collections are plural nouns: `/v1/devices`, with `/v1/devices/{deviceId}` for one device, and `/v1/device-statuses`
   for the latest status of every device. It is not under `/v1/devices/`, where its name would take a path a device ID
   could need.

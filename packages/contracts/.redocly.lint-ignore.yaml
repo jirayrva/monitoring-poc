@@ -7,3 +7,4 @@ monitor-api/openapi.json:
     - '#/paths/~1v1~1monitoring/get/responses'
     - '#/paths/~1v1~1monitoring~1start/post/responses'
     - '#/paths/~1v1~1monitoring~1stop/post/responses'
+    - '#/paths/~1livez/get/responses'

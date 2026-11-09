@@ -403,6 +403,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-58 | `{algorithm}` in the binary's arguments names the algorithm, from a list it supports           | R-14, I-05       |
 | D-59 | Starting and stopping monitoring are actions: `POST /v1/monitoring/start` and `/stop`          | R-16             |
 | D-60 | On a signal, release what started in reverse order, each part even if another fails            | I-08             |
+| D-61 | Compose runs the whole stack. The image is Debian slim, as a vendor binary likely needs glibc  | R-14, R-18, R-19 |
 
 ## 4 Not doing (yet)
 

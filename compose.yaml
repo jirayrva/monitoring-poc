@@ -1,4 +1,9 @@
-# Services for local development, tests and CI. Start them with `docker compose up -d --wait`.
+# The whole stack: `docker compose up`. For development, `pnpm deps:up` starts only what the service needs, and
+# `pnpm dev` runs the service itself.
+
+# Names the containers, network and volume device-monitor-*, whatever the checkout's folder is called.
+name: device-monitor
+
 services:
   postgres:
     image: postgres:18.6-trixie
@@ -18,6 +23,52 @@ services:
       interval: 2s
       timeout: 3s
       retries: 15
+      start_period: 10s
+
+  monitor:
+    build:
+      context: .
+      target: monitor
+    # Reaps any process the checksum binary leaves behind, and passes signals on to Node.
+    init: true
+    # Back after the stand's machine restarts (I-08).
+    restart: unless-stopped
+    environment:
+      DATASTORE_CONNECTION_STRING: postgres://monitor:monitor@postgres:5432/monitor
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    env_file:
+      # Device tokens, as DEVICE_<NAME>=<token> lines, kept out of this file.
+      - path: .env.devices
+        required: false
+      # The checksum binary's settings, beside it in vendor/, which Git ignores: CHECKSUM_BINARY_PATH under
+      # /opt/vendor, its algorithms, arguments and environment. Without it, the stand-in makes the checksums.
+      - path: vendor/checksum.env
+        required: false
+    volumes:
+      - type: bind
+        source: ./vendor
+        target: /opt/vendor
+        read_only: true
+    ports:
+      # 8080, so it does not clash with `pnpm dev` on 3000.
+      - 127.0.0.1:${MONITOR_PORT:-8080}:3000
+    networks:
+      - device-monitor
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      # Node, as the image has no curl. /livez never asks the database.
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/livez').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
       start_period: 10s
 
 volumes:

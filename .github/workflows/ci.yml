@@ -17,5 +17,5 @@ jobs:
       - uses: jdx/mise-action@v5.2.6
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
-      - run: docker compose up -d --wait
+      - run: pnpm deps:up
       - run: pnpm test:integration

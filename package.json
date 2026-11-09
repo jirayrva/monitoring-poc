@@ -14,6 +14,7 @@
     "test": "pnpm test:unit && pnpm test:integration",
     "test:unit": "node --test \"{apps,packages,tooling}/**/*.unit.test.ts\"",
     "test:integration": "node --test \"{apps,packages,tooling}/**/*.integration.test.ts\"",
+    "deps:up": "docker compose up -d --wait postgres",
     "clean:compose": "docker compose down --volumes",
     "clean:dependencies": "rimraf \"**/node_modules\"",
     "clean": "pnpm clean:compose && pnpm clean:dependencies"

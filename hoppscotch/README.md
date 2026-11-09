@@ -9,10 +9,10 @@ migrate them on import.
 
 ## The environment
 
-| Variable   | Default                 | What it is                                              |
-|------------|-------------------------|---------------------------------------------------------|
-| `monitor`  | `http://127.0.0.1:3000` | The monitor's API. Change it when `PORT` is set         |
-| `deviceId` | `hoppscotch-switch`     | The device the requests register, change and unregister |
+| Variable   | Default                 | What it is                                                                    |
+|------------|-------------------------|-------------------------------------------------------------------------------|
+| `monitor`  | `http://127.0.0.1:8080` | The monitor's API, as Compose publishes it. `pnpm dev` serves it on port 3000 |
+| `deviceId` | `hoppscotch-switch`     | The device the requests register, change and unregister                       |
 
 ## Running it
 

@@ -1,0 +1,9 @@
+# Only what the images need: sources and manifests. Dependencies are installed inside.
+**/node_modules
+**/__tests__
+**/testing
+.git
+.github
+.plan
+docs
+vendor

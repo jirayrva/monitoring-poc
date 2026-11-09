@@ -533,6 +533,28 @@ describe('API documentation', () => {
   });
 });
 
+const unavailable = () => Promise.resolve({ ok: false, failure: { reason: 'unavailable' } } as const);
+
+describe('GET /livez', () => {
+  it('answers ok without asking the stores, so a database outage does not make the service look dead', async (t) => {
+    // Arrange
+    const api = await startServerOn(t, {
+      listDevices: unavailable,
+      getDevice: unavailable,
+      insertDevice: unavailable,
+      updateDevice: unavailable,
+      deleteDevice: unavailable,
+    });
+
+    // Act
+    const response = await api.fetchPath('/livez');
+
+    // Assert
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { status: 'ok' });
+  });
+});
+
 describe('stopping', () => {
   it(
     'lets a request in progress finish, and stops once it has, though the client keeps its connection',

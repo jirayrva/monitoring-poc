@@ -1168,6 +1168,32 @@
           }
         }
       }
+    },
+    "/livez": {
+      "get": {
+        "operationId": "checkLiveness",
+        "summary": "Check liveness",
+        "description": "Answers 200 while the service can serve requests. It never asks the database.",
+        "responses": {
+          "200": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["status"],
+                  "properties": {
+                    "status": {
+                      "enum": ["ok"]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "servers": [

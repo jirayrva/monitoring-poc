@@ -19,7 +19,7 @@ The integration tests need Postgres, and each makes a schema of its own (D-52).
 to publish it on another port, and point `DATASTORE_CONNECTION_STRING` at it.
 
 ```bash
-docker compose up -d --wait
+pnpm deps:up
 pnpm test:integration
 ```
 
@@ -40,6 +40,7 @@ first, as in `test:unit`, so related ones sort together.
 | `pnpm test`               | Runs all tests                                                                     |
 | `pnpm test:unit`          | Runs `*.unit.test.ts`, which need nothing running                                  |
 | `pnpm test:integration`   | Runs `*.integration.test.ts`, which need the services they talk to                 |
+| `pnpm deps:up`            | Starts only Postgres, in Compose, and waits until it is ready                      |
 | `pnpm clean:compose`      | Stops Compose and deletes its volumes, so Postgres starts empty next time          |
 | `pnpm clean:dependencies` | Removes every `node_modules` folder                                                |
 | `pnpm clean`              | Both of the above. Run `pnpm install` afterwards                                   |
@@ -64,6 +65,9 @@ a setting for one without it. When a step's attempts and waits do not fit its bu
 `SIGINT` or `SIGTERM` (Ctrl-C) stops it cleanly, in the order in [ARCHITECTURE](ARCHITECTURE.md#stopping-the-service).
 It exits 0, or 1 when something failed to start or stop, when stopping took longer than `SHUTDOWN_TIMEOUT_MS`, or on
 a second signal while stopping.
+
+`docker compose up` runs it in a container instead, as the [README](../README.md#running-it) says, on the same
+Postgres. Stop that one (`docker compose stop monitor`) before `pnpm dev`, or both probe the same devices.
 
 To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
 

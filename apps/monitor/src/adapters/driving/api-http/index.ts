@@ -11,6 +11,7 @@ import type { Monitoring } from '../../../core/ports/driving/monitoring.ts';
 import { completeApiError, errorHandler, notFoundHandler } from './error-handlers.ts';
 import { registerDeviceRegistryRoutes } from './routes/device-registry.ts';
 import { registerDeviceStatusQueriesRoutes } from './routes/device-status-queries.ts';
+import { registerLivenessRoute } from './routes/liveness.ts';
 import { registerMonitoringRoutes } from './routes/monitoring.ts';
 
 type ApiHttpConfig = {
@@ -100,6 +101,11 @@ const createApiHttp: ApiHttpFactory = (dependencies) => {
     },
     { prefix: apiPrefix },
   );
+  // For the platform, not for clients, so outside the API's version.
+  void server.register((instance, _options, done) => {
+    registerLivenessRoute(instance);
+    done();
+  });
 
   return {
     start: async () => ({ url: await server.listen({ host, port }) }),
