@@ -5,7 +5,7 @@ import type { Environment, EnvReader } from './env.ts';
 const logLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 
 /** Every variable under these is one of the settings below, so any other is a typo. */
-const settingPrefixes = ['CHECKSUM_', 'DATASTORE_', 'MONITORING_'];
+const settingPrefixes = ['CHECKSUM_', 'DATASTORE_', 'MONITORING_', 'SHUTDOWN_'];
 
 /** A plain lowercase SQL identifier, so it needs no quoting in SQL or in a search_path option. */
 const schemaName = /^[a-z_][a-z0-9_]{0,62}$/;
@@ -48,6 +48,9 @@ const loadConfig = (env: Environment) => {
     host: read.text('HOST') ?? '127.0.0.1',
     port: read.number('PORT', 3000, { whole: true, max: 65_535 }),
     logLevel: read.oneOf('LOG_LEVEL', logLevels, 'info'),
+    // Under the 10 s Docker gives a container to stop, so the service, not a kill, says a stop was too slow.
+    shutdownTimeoutMs: read.number('SHUTDOWN_TIMEOUT_MS', 9000, { min: 1 }),
+    drainTimeoutMs: read.number('SHUTDOWN_DRAIN_TIMEOUT_MS', 3000),
     datastore: {
       connectionString: read.text('DATASTORE_CONNECTION_STRING') ?? 'postgres://monitor:monitor@127.0.0.1:5432/monitor',
       schema: readDatastoreSchema(read),

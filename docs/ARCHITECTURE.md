@@ -127,7 +127,8 @@ routes, and served with an API reference at `/docs/` (D-50).
   HTTP `statusCode` and its `statusName`, such as `NOT_FOUND`, the `requestPath`, the `requestId` and the `timestamp`.
   The `requestId` is a UUID, and the service logs each request under it as `reqId`, so an error a client reports can
   be found in the log.
-- A store call is aborted only when the client goes away before the response is sent.
+- A store call is aborted only when the client goes away before the response is sent, or when stopping the service
+  stops waiting for it (D-60).
 
 ## Device API
 
@@ -218,6 +219,8 @@ left for a retry. A budget is configured, or derived from what it contains.
 | Checksum step       | timeout          | 2 s                          |
 | Probe               | budget, derived  | 16 s                         |
 | Heartbeat stop      | timeout, derived | the probe budget             |
+| API drain           | timeout          | 3 s                          |
+| Shutdown            | budget           | 9 s, under Docker's 10 s     |
 
 The service warns at startup when a step's attempts and waits do not fit its budget.
 
@@ -249,6 +252,22 @@ longer than the interval is seen (I-01).
 A probe's steps run in sequence, so device connections equal probes at once. Not measured for the PoC (D-05): event
 loop delay with many devices answering at once, CPU for TLS handshakes with many HTTPS devices, and DNS lookups, which
 use a small thread pool.
+
+#### Stopping the service
+
+Every part that must be released is `AsyncDisposable`, and is added to one `AsyncDisposableStack` as it starts. On
+`SIGINT` or `SIGTERM`, the service releases them in reverse order (I-08, D-60):
+
+1. The heartbeat aborts the round in progress, and waits for it up to the probe budget. Nothing is recorded for an
+   aborted probe.
+2. The API takes no new requests. Those in progress get the drain timeout to finish, then their store calls are
+   cancelled and they answer 503 `cancelled`. Every answer closes its connection, so a kept-alive one does not hold
+   the server open.
+3. The datastores close their pools last, so nothing writes after a store has closed.
+
+Each part is released even when another fails. A startup that fails releases what had started. Any failure exits 1.
+So does releasing past the shutdown budget, which caps every step above, or a second signal while stopping, such as
+Ctrl-C twice: at once, with a log line, rather than be killed without one.
 
 ## Storage
 

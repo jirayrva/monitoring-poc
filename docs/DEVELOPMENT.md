@@ -61,6 +61,10 @@ wrong one stops the service at startup, with every problem listed (D-48), as doe
 a setting for one without it. When a step's attempts and waits do not fit its budget, the service warns at startup
 (D-37).
 
+`SIGINT` or `SIGTERM` (Ctrl-C) stops it cleanly, in the order in [ARCHITECTURE](ARCHITECTURE.md#stopping-the-service).
+It exits 0, or 1 when something failed to start or stop, when stopping took longer than `SHUTDOWN_TIMEOUT_MS`, or on
+a second signal while stopping.
+
 To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
 
 | Variable                                    | Default                                             | What it sets                                                             |
@@ -68,6 +72,8 @@ To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of i
 | `HOST`                                      | `127.0.0.1`                                         | Address to listen on. `0.0.0.0` accepts other machines                   |
 | `PORT`                                      | `3000`                                              | Port to listen on                                                        |
 | `LOG_LEVEL`                                 | `info`                                              | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`           |
+| `SHUTDOWN_TIMEOUT_MS`                       | `9000`                                              | Longest stop, then exit 1. Under Docker's 10 s                           |
+| `SHUTDOWN_DRAIN_TIMEOUT_MS`                 | `3000`                                              | Time API requests get to finish on stop. Then 503 `cancelled`            |
 | `DATASTORE_CONNECTION_STRING`               | `postgres://monitor:monitor@127.0.0.1:5432/monitor` | The Postgres to store devices and statuses in                            |
 | `DATASTORE_SCHEMA`                          | `monitor`                                           | Schema for the tables and migrations, never `public`. Created if missing |
 | `DATASTORE_CONNECTION_TIMEOUT_MS`           | `5000`                                              | Wait for a connection, then 503 `unavailable`                            |

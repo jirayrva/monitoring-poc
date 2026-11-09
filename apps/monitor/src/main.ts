@@ -18,6 +18,8 @@ import { checkTimings } from './config/timing-checks.ts';
 import { probeBudgetMs } from './core/application/device-probes/index.ts';
 import { createApplication } from './core/application/index.ts';
 import { migrateDatabase } from './infrastructure/postgres/migrate.ts';
+import { runService } from './run-service.ts';
+import type { StartService } from './run-service.ts';
 
 const logger = pino({ level: config.logLevel });
 for (const warning of checkTimings(config.monitoring)) {
@@ -29,37 +31,37 @@ const checksumGenerator =
     ? createChecksumGeneratorProcess(config.checksumGenerator)
     : createChecksumGeneratorStandIn();
 
-await migrateDatabase({ ...config.datastore, dirs: [deviceDatastoreMigrations, deviceStatusDatastoreMigrations] });
+/**
+ * Each part is added to resources as soon as it starts, so it is released in reverse order: the heartbeat first, so no
+ * probe writes after a store has closed, then the API, and the datastores last.
+ */
+const startService: StartService = async (resources) => {
+  await migrateDatabase({ ...config.datastore, dirs: [deviceDatastoreMigrations, deviceStatusDatastoreMigrations] });
 
-const deviceDatastore = createDeviceDatastorePostgres(config.datastore);
-const deviceStatusDatastore = createDeviceStatusDatastorePostgres(config.datastore);
-const { deviceRegistry, deviceStatusQueries, monitoring, deviceProbes } = createApplication({
-  deviceDatastore,
-  deviceStatusDatastore,
-  deviceHealthReader: createDeviceHealthReaderHttp({ readSecret: readDeviceSecret }),
-  deviceDiagnosticsReaders: [createDeviceDiagnosticsReaderRest({ readSecret: readDeviceSecret })],
-  checksumGenerator,
-  now: () => new Date(),
-  random: Math.random,
-  policy: config.monitoring,
-});
-const apiHttp = createApiHttp({ deviceRegistry, deviceStatusQueries, monitoring, config });
-const heartbeat = createHeartbeat({
-  deviceProbes,
-  logger,
-  config: { intervalMs: config.monitoring.intervalMs, stopTimeoutMs: probeBudgetMs(config.monitoring) },
-});
+  const deviceDatastore = resources.use(createDeviceDatastorePostgres(config.datastore));
+  const deviceStatusDatastore = resources.use(createDeviceStatusDatastorePostgres(config.datastore));
+  const { deviceRegistry, deviceStatusQueries, monitoring, deviceProbes } = createApplication({
+    deviceDatastore,
+    deviceStatusDatastore,
+    deviceHealthReader: createDeviceHealthReaderHttp({ readSecret: readDeviceSecret }),
+    deviceDiagnosticsReaders: [createDeviceDiagnosticsReaderRest({ readSecret: readDeviceSecret })],
+    checksumGenerator,
+    now: () => new Date(),
+    random: Math.random,
+    policy: config.monitoring,
+  });
 
-await apiHttp.start();
-heartbeat.start();
+  const apiHttp = resources.use(createApiHttp({ deviceRegistry, deviceStatusQueries, monitoring, config }));
+  await apiHttp.start();
 
-// Probes first, so none writes after the store has closed.
-const stop = async () => {
-  await heartbeat.stop();
-  await apiHttp.stop();
-  await deviceDatastore[Symbol.asyncDispose]();
-  await deviceStatusDatastore[Symbol.asyncDispose]();
+  const heartbeat = resources.use(
+    createHeartbeat({
+      deviceProbes,
+      logger,
+      config: { intervalMs: config.monitoring.intervalMs, stopTimeoutMs: probeBudgetMs(config.monitoring) },
+    }),
+  );
+  heartbeat.start();
 };
 
-process.once('SIGINT', () => void stop());
-process.once('SIGTERM', () => void stop());
+await runService(startService, { logger, process, shutdownTimeoutMs: config.shutdownTimeoutMs });

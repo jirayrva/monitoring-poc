@@ -54,6 +54,8 @@ const assertInvalidRequest = async (response: Response) => {
 const startServer = async (t: TestContext, ...registrations: (typeof lobby)[]) =>
   startServerOn(t, createDeviceDatastoreInMemory(), ...registrations);
 
+const drainTimeoutMs = 200;
+
 /** When the test servers register a device, as the samples have it. */
 const registeredAt = new Date(Date.UTC(2026, 10, 1, 8));
 
@@ -73,9 +75,12 @@ const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, .
     random: Math.random,
     policy: loadConfig({}).monitoring,
   });
-  const server = createApiHttp({ ...application, config: { host: '127.0.0.1', port: 0, logLevel: 'silent' } });
+  const server = createApiHttp({
+    ...application,
+    config: { host: '127.0.0.1', port: 0, logLevel: 'silent', drainTimeoutMs },
+  });
   const { url } = await server.start();
-  t.after(() => server.stop());
+  t.after(() => server[Symbol.asyncDispose]());
   return {
     request: (method: string, path: string, body?: unknown, signal?: AbortSignal) =>
       fetch(`${url}/v1${path}`, {
@@ -91,6 +96,7 @@ const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, .
     listed: async () => (await fetch(`${url}/v1/devices`)).json(),
     fetchPath: (path: string) => fetch(`${url}${path}`),
     appendStatus: (status: DeviceStatus) => deviceStatusDatastore.appendStatus({ status }, options),
+    stop: () => server[Symbol.asyncDispose](),
   };
 };
 
@@ -420,6 +426,38 @@ describe('every route', () => {
         await aborted.promise;
       });
 
+      it('cancels the store call when stopping stops waiting for it, and answers 503', { timeout: 5000 }, async (t) => {
+        // Arrange
+        const called = Promise.withResolvers<void>();
+        const api = await startServerOn(t, {
+          ...createDeviceDatastoreInMemory(),
+          [storeCall]: (_input: unknown, { signal }: { signal: AbortSignal }) => {
+            called.resolve();
+            // Gives up after a second, so a call the drain never cancels fails the test rather than hang it.
+            return new Promise((resolve) => {
+              signal.addEventListener('abort', () => resolve({ ok: false, failure: { reason: 'cancelled' } }));
+              setTimeout(() => resolve({ ok: false, failure: { reason: 'timeout' } }), 1000);
+            });
+          },
+        });
+        const request = api.request(method, path, body);
+        await called.promise;
+
+        // Act
+        const startedAt = performance.now();
+        const stopped = api.stop();
+        const response = await request;
+        await stopped;
+
+        // Assert
+        assert.equal(response.status, 503);
+        assert.deepEqual(await problemOf(response), {
+          ...errorSamples['store-unavailable'],
+          details: { reason: 'cancelled' },
+        });
+        assert.ok(performance.now() - startedAt >= drainTimeoutMs - 10);
+      });
+
       it('keeps the store call going while the client waits', async (t) => {
         // Arrange
         const api = await startServerOn(
@@ -493,4 +531,39 @@ describe('API documentation', () => {
     assert.match(response.headers.get('content-type') ?? '', /text\/html/);
     assert.match(await response.text(), /<title>Device Monitor API<\/title>/);
   });
+});
+
+describe('stopping', () => {
+  it(
+    'lets a request in progress finish, and stops once it has, though the client keeps its connection',
+    {
+      timeout: 5000,
+    },
+    async (t) => {
+      // Arrange
+      const called = Promise.withResolvers<void>();
+      const store = createDeviceDatastoreInMemory();
+      const api = await startServerOn(t, {
+        ...store,
+        listDevices: async (input, options) => {
+          called.resolve();
+          await sleep(100);
+          return store.listDevices(input, options);
+        },
+      });
+      const request = api.request('GET', '/devices');
+      await called.promise;
+
+      // Act
+      const startedAt = performance.now();
+      const stopped = api.stop();
+      const response = await request;
+      await stopped;
+
+      // Assert
+      assert.equal(response.status, 200);
+      assert.equal(response.headers.get('connection'), 'close');
+      assert.ok(performance.now() - startedAt < drainTimeoutMs, 'stopped before the drain ended');
+    },
+  );
 });

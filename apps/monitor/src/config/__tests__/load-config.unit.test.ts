@@ -22,6 +22,8 @@ describe('loadConfig', () => {
       host: '127.0.0.1',
       port: 3000,
       logLevel: 'info',
+      shutdownTimeoutMs: 9000,
+      drainTimeoutMs: 3000,
       datastore: {
         connectionString: 'postgres://monitor:monitor@127.0.0.1:5432/monitor',
         schema: 'monitor',

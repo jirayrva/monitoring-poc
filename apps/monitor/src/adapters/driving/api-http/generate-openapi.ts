@@ -18,7 +18,6 @@ const application = createApplication({
   random: Math.random,
   policy: config.monitoring,
 });
-const server = createApiHttp({ ...application, config });
+await using server = createApiHttp({ ...application, config });
 
 await writeFile(openApiPath, `${JSON.stringify(await server.openApi(), undefined, 2)}\n`);
-await server.stop();

@@ -1,12 +1,16 @@
 import type { FastifyInstance } from 'fastify';
 import type { DeviceRegistration } from '../../../../core/domain/device.ts';
 import type { DeviceRegistry } from '../../../../core/ports/driving/device-registry.ts';
-import { clientGoneSignal } from '../client-gone-signal.ts';
+import { callSignal } from '../call-signal.ts';
 import { apiError, deviceIdParams, sendFailure } from '../responses.ts';
 
 type DeviceIdParams = Pick<DeviceRegistration, 'deviceId'>;
 
-const registerDeviceRegistryRoutes = (instance: FastifyInstance, deviceRegistry: DeviceRegistry) => {
+const registerDeviceRegistryRoutes = (
+  instance: FastifyInstance,
+  deviceRegistry: DeviceRegistry,
+  drainEnded: AbortSignal,
+) => {
   instance.get(
     '/devices',
     {
@@ -18,7 +22,7 @@ const registerDeviceRegistryRoutes = (instance: FastifyInstance, deviceRegistry:
       },
     },
     async (_request, reply) => {
-      const result = await deviceRegistry.listDevices({}, { signal: clientGoneSignal(reply) });
+      const result = await deviceRegistry.listDevices({}, { signal: callSignal(reply, drainEnded) });
       return result.ok ? reply.send({ data: result.value }) : sendFailure(reply, result.failure);
     },
   );
@@ -36,7 +40,7 @@ const registerDeviceRegistryRoutes = (instance: FastifyInstance, deviceRegistry:
     },
     async (request, reply) => {
       const { deviceId } = request.params;
-      const result = await deviceRegistry.getDevice({ deviceId }, { signal: clientGoneSignal(reply) });
+      const result = await deviceRegistry.getDevice({ deviceId }, { signal: callSignal(reply, drainEnded) });
       return result.ok ? reply.send(result.value) : sendFailure(reply, result.failure);
     },
   );
@@ -55,7 +59,7 @@ const registerDeviceRegistryRoutes = (instance: FastifyInstance, deviceRegistry:
     },
     async (request, reply) => {
       const registration = request.body;
-      const result = await deviceRegistry.registerDevice({ registration }, { signal: clientGoneSignal(reply) });
+      const result = await deviceRegistry.registerDevice({ registration }, { signal: callSignal(reply, drainEnded) });
       if (!result.ok) {
         return sendFailure(reply, result.failure);
       }
@@ -82,7 +86,7 @@ const registerDeviceRegistryRoutes = (instance: FastifyInstance, deviceRegistry:
     },
     async (request, reply) => {
       const registration = { ...request.body, deviceId: request.params.deviceId };
-      const result = await deviceRegistry.updateDevice({ registration }, { signal: clientGoneSignal(reply) });
+      const result = await deviceRegistry.updateDevice({ registration }, { signal: callSignal(reply, drainEnded) });
       return result.ok ? reply.send(registration) : sendFailure(reply, result.failure);
     },
   );
@@ -105,7 +109,7 @@ const registerDeviceRegistryRoutes = (instance: FastifyInstance, deviceRegistry:
     },
     async (request, reply) => {
       const { deviceId } = request.params;
-      const result = await deviceRegistry.unregisterDevice({ deviceId }, { signal: clientGoneSignal(reply) });
+      const result = await deviceRegistry.unregisterDevice({ deviceId }, { signal: callSignal(reply, drainEnded) });
       return result.ok ? reply.code(204).send() : sendFailure(reply, result.failure);
     },
   );

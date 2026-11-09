@@ -62,7 +62,7 @@ const startHeartbeat = (t: TestContext, deviceProbes: DeviceProbes, config: Part
     config: { intervalMs: 5, stopTimeoutMs: 1000, ...config },
   });
   heartbeat.start();
-  t.after(() => heartbeat.stop());
+  t.after(() => heartbeat[Symbol.asyncDispose]());
   return { heartbeat, logs };
 };
 
@@ -163,7 +163,7 @@ describe('heartbeat', () => {
     await waitFor(() => probes.rounds() >= 1);
 
     // Act
-    await heartbeat.stop();
+    await heartbeat[Symbol.asyncDispose]();
     await sleep(30);
 
     // Assert
@@ -179,7 +179,7 @@ describe('heartbeat', () => {
     await waitFor(() => probes.rounds() >= 1);
 
     // Act
-    await heartbeat.stop();
+    await heartbeat[Symbol.asyncDispose]();
 
     // Assert
     assert.deepEqual(logs.entries, [
@@ -209,6 +209,6 @@ describe('heartbeat', () => {
     });
 
     // Act
-    await heartbeat.stop();
+    await heartbeat[Symbol.asyncDispose]();
   });
 });

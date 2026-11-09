@@ -1,9 +1,13 @@
 import type { FastifyInstance } from 'fastify';
 import type { DeviceStatusQueries } from '../../../../core/ports/driving/device-status-queries.ts';
-import { clientGoneSignal } from '../client-gone-signal.ts';
+import { callSignal } from '../call-signal.ts';
 import { apiError, sendFailure } from '../responses.ts';
 
-const registerDeviceStatusQueriesRoutes = (instance: FastifyInstance, deviceStatusQueries: DeviceStatusQueries) => {
+const registerDeviceStatusQueriesRoutes = (
+  instance: FastifyInstance,
+  deviceStatusQueries: DeviceStatusQueries,
+  drainEnded: AbortSignal,
+) => {
   instance.get(
     '/device-statuses',
     {
@@ -16,7 +20,7 @@ const registerDeviceStatusQueriesRoutes = (instance: FastifyInstance, deviceStat
       },
     },
     async (_request, reply) => {
-      const result = await deviceStatusQueries.listLatestStatuses({}, { signal: clientGoneSignal(reply) });
+      const result = await deviceStatusQueries.listLatestStatuses({}, { signal: callSignal(reply, drainEnded) });
       return result.ok ? reply.send({ data: result.value }) : sendFailure(reply, result.failure);
     },
   );

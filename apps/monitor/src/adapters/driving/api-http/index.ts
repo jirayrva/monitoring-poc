@@ -13,7 +13,12 @@ import { registerDeviceRegistryRoutes } from './routes/device-registry.ts';
 import { registerDeviceStatusQueriesRoutes } from './routes/device-status-queries.ts';
 import { registerMonitoringRoutes } from './routes/monitoring.ts';
 
-type ApiHttpConfig = { host: string; port: number; logLevel: string };
+type ApiHttpConfig = {
+  host: string;
+  port: number;
+  logLevel: string;
+  drainTimeoutMs: number;
+};
 
 type ApiHttpDependencies = {
   deviceRegistry: DeviceRegistry;
@@ -22,9 +27,12 @@ type ApiHttpDependencies = {
   config: ApiHttpConfig;
 };
 
-type ApiHttp = {
+/**
+ * Disposing it stops it: it takes no new requests, lets those in progress finish for drainTimeoutMs, then cancels their
+ * calls, which answer 503, and waits for them to end.
+ */
+type ApiHttp = AsyncDisposable & {
   start: () => Promise<{ url: string }>;
-  stop: () => Promise<void>;
   openApi: () => Promise<unknown>;
 };
 
@@ -38,7 +46,9 @@ const apiPrefix = '/v1';
 
 const createApiHttp: ApiHttpFactory = (dependencies) => {
   const { deviceRegistry, deviceStatusQueries, monitoring, config } = dependencies;
-  const { host, port, logLevel } = config;
+  const { host, port, logLevel, drainTimeoutMs } = config;
+  const drain = new AbortController();
+  let stopping = false;
   const server = Fastify({
     logger: { level: logLevel },
     // A UUID rather than Fastify's counter, so an ID in an error answer finds one request in the log.
@@ -50,6 +60,12 @@ const createApiHttp: ApiHttpFactory = (dependencies) => {
     server.addSchema(JSON.parse(readFileSync(join(schemaDirectory, file), 'utf8')));
   }
 
+  // While stopping, every answer closes its connection, or a client's kept-alive one would hold the server open.
+  server.addHook('onSend', async (_request, reply) => {
+    if (stopping) {
+      void reply.header('connection', 'close');
+    }
+  });
   server.addHook('preSerialization', completeApiError);
   server.setErrorHandler(errorHandler);
   server.setNotFoundHandler(notFoundHandler);
@@ -77,8 +93,8 @@ const createApiHttp: ApiHttpFactory = (dependencies) => {
   // Registered as a plugin so it loads after @fastify/swagger, which only documents routes added after it.
   void server.register(
     (instance, _options, done) => {
-      registerDeviceRegistryRoutes(instance, deviceRegistry);
-      registerDeviceStatusQueriesRoutes(instance, deviceStatusQueries);
+      registerDeviceRegistryRoutes(instance, deviceRegistry, drain.signal);
+      registerDeviceStatusQueriesRoutes(instance, deviceStatusQueries, drain.signal);
       registerMonitoringRoutes(instance, monitoring);
       done();
     },
@@ -87,7 +103,15 @@ const createApiHttp: ApiHttpFactory = (dependencies) => {
 
   return {
     start: async () => ({ url: await server.listen({ host, port }) }),
-    stop: () => server.close(),
+    [Symbol.asyncDispose]: async () => {
+      stopping = true;
+      const drainEnds = setTimeout(() => drain.abort(), drainTimeoutMs);
+      try {
+        await server.close();
+      } finally {
+        clearTimeout(drainEnds);
+      }
+    },
     openApi: async () => {
       await server.ready();
       return server.swagger();

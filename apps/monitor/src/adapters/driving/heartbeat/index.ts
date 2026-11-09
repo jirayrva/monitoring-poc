@@ -13,10 +13,9 @@ type HeartbeatConfig = {
 
 type HeartbeatDependencies = { deviceProbes: DeviceProbes; logger: HeartbeatLogger; config: HeartbeatConfig };
 
-type Heartbeat = {
+/** Disposing it stops it: it aborts the round in progress, and waits for it to end, up to the stop timeout. */
+type Heartbeat = AsyncDisposable & {
   start: () => void;
-  /** Aborts the round in progress, and waits for it to end, up to the stop timeout. */
-  stop: () => Promise<void>;
 };
 
 const createHeartbeat = (dependencies: HeartbeatDependencies): Heartbeat => {
@@ -58,7 +57,7 @@ const createHeartbeat = (dependencies: HeartbeatDependencies): Heartbeat => {
         running = { controller, done: loop(controller.signal) };
       }
     },
-    stop: async () => {
+    [Symbol.asyncDispose]: async () => {
       if (running === undefined) {
         return;
       }
