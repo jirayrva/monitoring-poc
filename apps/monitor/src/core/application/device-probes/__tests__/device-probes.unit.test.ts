@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { setTimeout as sleep } from 'node:timers/promises';
 import { describe, it } from 'node:test';
 import type { RegisteredDevice } from '../../../domain/device.ts';
 import type { DeviceStatus } from '../../../domain/device-status.ts';
@@ -6,9 +7,14 @@ import { door, lobby } from '../../../domain/testing/devices.ts';
 import type { ChecksumGenerator } from '../../../ports/driven/checksum-generator.ts';
 import type { DeviceDatastore } from '../../../ports/driven/device-datastore.ts';
 import type { DeviceDiagnosticsReader, DiagnosticsReport } from '../../../ports/driven/device-diagnostics-reader.ts';
-import type { DeviceHealthReader, HealthReport } from '../../../ports/driven/device-health-reader.ts';
+import type {
+  DeviceHealthReader,
+  HealthCallFailure,
+  HealthReport,
+} from '../../../ports/driven/device-health-reader.ts';
 import type { DeviceStatusDatastore } from '../../../ports/driven/device-status-datastore.ts';
 import { createDeviceProbes, probeBudgetMs } from '../index.ts';
+import type { RetryPolicy } from '../retry-policy.ts';
 
 const at = (second: number) => new Date(Date.UTC(2026, 10, 3, 9, 0, second));
 const registeredAt = new Date(Date.UTC(2026, 10, 1, 8));
@@ -41,8 +47,23 @@ const untilAborted = <Failure>(signal: AbortSignal, failure: Failure) =>
     }
   });
 
-const hanging: DeviceHealthReader['readHealth'] = (_input, { signal }) =>
-  untilAborted(signal, { response: 'none', reason: 'timeout' } as const);
+const hanging = () => {
+  let calls = 0;
+  const readHealth: DeviceHealthReader['readHealth'] = (_input, { signal }) => {
+    calls += 1;
+    return untilAborted(signal, { response: 'none', reason: 'timeout' } as const);
+  };
+  return { readHealth, calls: () => calls };
+};
+
+const failingFirst = (failure: HealthCallFailure, failures: number) => {
+  let calls = 0;
+  const readHealth: DeviceHealthReader['readHealth'] = (input, callOptions) => {
+    calls += 1;
+    return calls <= failures ? Promise.resolve({ ok: false, failure }) : answering(input, callOptions);
+  };
+  return { readHealth, calls: () => calls };
+};
 
 const generator = { name: 'test-generator', version: '1', standIn: true };
 
@@ -76,6 +97,8 @@ type SetUp = {
   appendStatus?: DeviceStatusDatastore['appendStatus'];
   downProbeThreshold?: number;
   maxConcurrentProbes?: number;
+  retry?: RetryPolicy;
+  healthAttemptTimeoutMs?: number;
   healthBudgetMs?: number;
   readers?: DeviceDiagnosticsReader[];
   generateChecksum?: ChecksumGenerator['generateChecksum'];
@@ -110,10 +133,15 @@ const setUp = (overrides: SetUp = {}) => {
     deviceDiagnosticsReaders: overrides.readers ?? [],
     checksumGenerator: { info: generator, generateChecksum: overrides.generateChecksum ?? generatingAbc },
     now: overrides.now ?? (() => at(seconds++)),
+    // Every wait at its longest, so tests can time them.
+    random: () => 1,
     policy: {
       downProbeThreshold: overrides.downProbeThreshold ?? 3,
       maxConcurrentProbes: overrides.maxConcurrentProbes ?? 10,
+      retry: overrides.retry ?? { retries: 0, baseDelayMs: 0, maxDelayMs: 0 },
+      healthAttemptTimeoutMs: overrides.healthAttemptTimeoutMs ?? 1000,
       healthBudgetMs: overrides.healthBudgetMs ?? 1000,
+      diagnosticsAttemptTimeoutMs: 1000,
       diagnosticsBudgetMs: overrides.diagnosticsBudgetMs ?? 1000,
       checksumTimeoutMs: overrides.checksumTimeoutMs ?? 1000,
     },
@@ -355,15 +383,134 @@ describe('probeDevices', () => {
     assert.equal(probes, 1);
   });
 
-  it('ends the health call at its budget, so a device that hangs holds up no round, and records the timeout', async () => {
-    // Arrange
-    const { deviceProbes, appended } = setUp({ readHealth: hanging, healthBudgetMs: 20 });
+  describe('health retries', () => {
+    const retryTwice: RetryPolicy = { retries: 2, baseDelayMs: 0, maxDelayMs: 0 };
 
-    // Act
-    await deviceProbes.probeDevices({}, options);
+    it('asks again after no response, so one dropped answer is not a failure', async () => {
+      // Arrange
+      const reader = failingFirst({ response: 'none', reason: 'timeout' }, 1);
+      const { deviceProbes, appended } = setUp({ readHealth: reader.readHealth, retry: retryTwice });
 
-    // Assert
-    assert.partialDeepStrictEqual(appended, [{ state: 'suspect', lastProbe: { response: 'none', reason: 'timeout' } }]);
+      // Act
+      await deviceProbes.probeDevices({}, options);
+
+      // Assert
+      assert.equal(reader.calls(), 2);
+      assert.partialDeepStrictEqual(appended, [{ state: 'up' }]);
+    });
+
+    it('records the failure once the retries run out, timed over every attempt', async () => {
+      // Arrange
+      const reader = failingFirst({ response: 'unexpected', reason: 'http_error', httpStatus: 503 }, 3);
+      const { deviceProbes, appended } = setUp({ readHealth: reader.readHealth, retry: retryTwice });
+
+      // Act
+      await deviceProbes.probeDevices({}, options);
+
+      // Assert
+      assert.equal(reader.calls(), 3);
+      assert.partialDeepStrictEqual(appended, [
+        { state: 'suspect', lastProbe: { reason: 'http_error', httpStatus: 503, probedAt: at(0), durationMs: 1000 } },
+      ]);
+    });
+
+    const notRetried: [string, HealthCallFailure][] = [
+      ['a 4xx', { response: 'unexpected', reason: 'http_error', httpStatus: 400 }],
+      ['an answer that is not JSON', { response: 'unexpected', reason: 'unparsable', httpStatus: 200 }],
+      ['a misconfigured registration', { response: 'misconfigured', reason: 'auth_failed', httpStatus: 401 }],
+    ];
+    for (const [name, failure] of notRetried) {
+      it(`does not ask again after ${name}, which would come back the same`, async () => {
+        // Arrange
+        const reader = failingFirst(failure, 1);
+        const { deviceProbes } = setUp({ readHealth: reader.readHealth, retry: retryTwice });
+
+        // Act
+        await deviceProbes.probeDevices({}, options);
+
+        // Assert
+        assert.equal(reader.calls(), 1);
+      });
+    }
+
+    it('stops waiting to retry when the round is aborted, and never retries after', async () => {
+      // Arrange
+      const round = new AbortController();
+      const reader = failingFirst({ response: 'none', reason: 'unreachable' }, 1);
+      const { deviceProbes } = setUp({
+        readHealth: (input, callOptions) => {
+          setImmediate(() => round.abort());
+          return reader.readHealth(input, callOptions);
+        },
+        retry: { retries: 1, baseDelayMs: 200, maxDelayMs: 200 },
+      });
+
+      // Act
+      await deviceProbes.probeDevices({}, { signal: round.signal });
+      // Past when the retry would have run, had the wait ignored the abort.
+      await sleep(400);
+
+      // Assert
+      assert.equal(reader.calls(), 1);
+    });
+  });
+
+  describe('timeouts and budgets', () => {
+    it('ends an attempt at its timeout, so a device that hangs leaves time for a retry', async () => {
+      // Arrange
+      let calls = 0;
+      const hangsFirst: DeviceHealthReader['readHealth'] = (input, callOptions) => {
+        calls += 1;
+        return calls === 1 ? hanging().readHealth(input, callOptions) : answering(input, callOptions);
+      };
+      const { deviceProbes, appended } = setUp({
+        readHealth: hangsFirst,
+        retry: { retries: 1, baseDelayMs: 0, maxDelayMs: 0 },
+        healthAttemptTimeoutMs: 20,
+      });
+
+      // Act
+      await deviceProbes.probeDevices({}, options);
+
+      // Assert
+      assert.equal(calls, 2);
+      assert.partialDeepStrictEqual(appended, [{ state: 'up' }]);
+    });
+
+    it('ends the health step at its budget, cutting an attempt short, and records the timeout', async () => {
+      // Arrange
+      const reader = hanging();
+      const { deviceProbes, appended } = setUp({
+        readHealth: reader.readHealth,
+        retry: { retries: 5, baseDelayMs: 0, maxDelayMs: 0 },
+        healthBudgetMs: 20,
+      });
+
+      // Act
+      await deviceProbes.probeDevices({}, options);
+
+      // Assert
+      assert.equal(reader.calls(), 1);
+      assert.partialDeepStrictEqual(appended, [
+        { state: 'suspect', lastProbe: { response: 'none', reason: 'timeout' } },
+      ]);
+    });
+
+    it('starts no retry once the wait for it would pass the budget', async () => {
+      // Arrange
+      const reader = failingFirst({ response: 'none', reason: 'unreachable' }, 10);
+      const { deviceProbes } = setUp({
+        readHealth: reader.readHealth,
+        retry: { retries: 5, baseDelayMs: 60, maxDelayMs: 60 },
+        healthBudgetMs: 100,
+      });
+
+      // Act
+      await deviceProbes.probeDevices({}, options);
+
+      // Assert
+      assert.equal(reader.calls(), 2);
+    });
   });
 
   describe('diagnostics', () => {
@@ -458,6 +605,27 @@ describe('probeDevices', () => {
 
       // Assert
       assert.deepEqual(diagnostics, { state: 'unavailable', ...failure });
+    });
+
+    it('asks again after no response, with the same policy as health', async () => {
+      // Arrange
+      let reads = 0;
+      const reader = restReader(() => {
+        reads += 1;
+        return reads === 1
+          ? Promise.resolve({ ok: false, failure: { protocol: 'rest', reason: 'timeout' } })
+          : ok(report);
+      });
+
+      // Act
+      const diagnostics = await diagnosticsOf({
+        readers: [reader],
+        retry: { retries: 1, baseDelayMs: 0, maxDelayMs: 0 },
+      });
+
+      // Assert
+      assert.equal(reads, 2);
+      assert.equal(diagnostics.state, 'available');
     });
 
     it('ends them at the diagnostics budget', async () => {
@@ -555,7 +723,10 @@ it('makes the probe budget the sum of its steps: health, diagnostics and the che
   const budgetMs = probeBudgetMs({
     downProbeThreshold: 3,
     maxConcurrentProbes: 1,
+    retry: { retries: 0, baseDelayMs: 0, maxDelayMs: 0 },
+    healthAttemptTimeoutMs: 1,
     healthBudgetMs: 7000,
+    diagnosticsAttemptTimeoutMs: 1,
     diagnosticsBudgetMs: 6000,
     checksumTimeoutMs: 2000,
   });

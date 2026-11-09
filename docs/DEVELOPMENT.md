@@ -58,31 +58,37 @@ It needs Postgres (see [Setup](#setup)), and applies any pending migrations when
 <http://127.0.0.1:3000> by default. The API reference is at [`/docs/`](http://127.0.0.1:3000/docs/), and the
 OpenAPI document at [`/docs/openapi.json`](http://127.0.0.1:3000/docs/openapi.json). Every setting has a default. A
 wrong one stops the service at startup, with every problem listed (D-48), as does a checksum binary it cannot run, or
-a setting for one without it.
+a setting for one without it. When a step's attempts and waits do not fit its budget, the service warns at startup
+(D-37).
 
 To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
 
-| Variable                           | Default                                             | What it sets                                                             |
-|------------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------|
-| `HOST`                             | `127.0.0.1`                                         | Address to listen on. `0.0.0.0` accepts other machines                   |
-| `PORT`                             | `3000`                                              | Port to listen on                                                        |
-| `LOG_LEVEL`                        | `info`                                              | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`           |
-| `DATASTORE_CONNECTION_STRING`      | `postgres://monitor:monitor@127.0.0.1:5432/monitor` | The Postgres to store devices and statuses in                            |
-| `DATASTORE_SCHEMA`                 | `monitor`                                           | Schema for the tables and migrations, never `public`. Created if missing |
-| `DATASTORE_CONNECTION_TIMEOUT_MS`  | `5000`                                              | Wait for a connection, then 503 `unavailable`                            |
-| `DATASTORE_QUERY_TIMEOUT_MS`       | `5000`                                              | Longest query, then 503 `timeout`                                        |
-| `MONITORING_INTERVAL_MS`           | `30000`                                             | Wait between the end of one round and the start of the next (Q-08)       |
-| `MONITORING_DOWN_PROBE_THRESHOLD`  | `3`                                                 | Failed probes in a row before `down` (D-28)                              |
-| `MONITORING_MAX_CONCURRENT_PROBES` | `250`                                               | Devices probed at once                                                   |
-| `MONITORING_HEALTH_BUDGET_MS`      | `7000`                                              | Longest health call (D-37)                                               |
-| `MONITORING_DIAGNOSTICS_BUDGET_MS` | `7000`                                              | Longest diagnostics call                                                 |
-| `MONITORING_CHECKSUM_TIMEOUT_MS`   | `2000`                                              | Longest checksum generation. Not retried                                 |
-| `CHECKSUM_BINARY_PATH`             | —                                                   | The checksum binary, as an absolute path. Unset: the stand-in (Q-07)     |
-| `CHECKSUM_BINARY_ARGS`             | `[]`                                                | Its arguments, as a JSON array. `{algorithm}` names the algorithm (D-58) |
-| `CHECKSUM_BINARY_ALGORITHMS`       | —                                                   | The algorithms it supports, comma-separated. Required with a binary      |
-| `CHECKSUM_BINARY_VERSION`          | `unknown`                                           | Its version, named with every checksum                                   |
-| `CHECKSUM_ENV_*`                   | —                                                   | `CHECKSUM_ENV_<NAME>` is `<NAME>` in its environment, its only variables |
-| `DEVICE_*`                         | —                                                   | Device tokens, each named by a registration's `secretRef` (D-38)         |
+| Variable                                    | Default                                             | What it sets                                                             |
+|---------------------------------------------|-----------------------------------------------------|--------------------------------------------------------------------------|
+| `HOST`                                      | `127.0.0.1`                                         | Address to listen on. `0.0.0.0` accepts other machines                   |
+| `PORT`                                      | `3000`                                              | Port to listen on                                                        |
+| `LOG_LEVEL`                                 | `info`                                              | `fatal`, `error`, `warn`, `info`, `debug`, `trace` or `silent`           |
+| `DATASTORE_CONNECTION_STRING`               | `postgres://monitor:monitor@127.0.0.1:5432/monitor` | The Postgres to store devices and statuses in                            |
+| `DATASTORE_SCHEMA`                          | `monitor`                                           | Schema for the tables and migrations, never `public`. Created if missing |
+| `DATASTORE_CONNECTION_TIMEOUT_MS`           | `5000`                                              | Wait for a connection, then 503 `unavailable`                            |
+| `DATASTORE_QUERY_TIMEOUT_MS`                | `5000`                                              | Longest query, then 503 `timeout`                                        |
+| `MONITORING_INTERVAL_MS`                    | `30000`                                             | Wait between the end of one round and the start of the next (Q-08)       |
+| `MONITORING_DOWN_PROBE_THRESHOLD`           | `3`                                                 | Failed probes in a row before `down` (D-28)                              |
+| `MONITORING_MAX_CONCURRENT_PROBES`          | `250`                                               | Devices probed at once                                                   |
+| `MONITORING_HEALTH_ATTEMPT_TIMEOUT_MS`      | `3000`                                              | Longest health attempt (D-37)                                            |
+| `MONITORING_HEALTH_BUDGET_MS`               | `7000`                                              | Longest health step: every attempt and the waits between them            |
+| `MONITORING_DIAGNOSTICS_ATTEMPT_TIMEOUT_MS` | `3000`                                              | Longest diagnostics attempt                                              |
+| `MONITORING_DIAGNOSTICS_BUDGET_MS`          | `7000`                                              | Longest diagnostics step: every attempt and the waits between them       |
+| `MONITORING_CHECKSUM_TIMEOUT_MS`            | `2000`                                              | Longest checksum generation. Not retried                                 |
+| `MONITORING_RETRY_COUNT`                    | `1`                                                 | Retries after the first attempt of a device call. `0`: none (D-35)       |
+| `MONITORING_RETRY_BASE_DELAY_MS`            | `1000`                                              | Backoff before the first retry, doubled for each one after               |
+| `MONITORING_RETRY_MAX_DELAY_MS`             | `4000`                                              | Longest backoff. Each wait is a random time up to it (D-36)              |
+| `CHECKSUM_BINARY_PATH`                      | —                                                   | The checksum binary, as an absolute path. Unset: the stand-in (Q-07)     |
+| `CHECKSUM_BINARY_ARGS`                      | `[]`                                                | Its arguments, as a JSON array. `{algorithm}` names the algorithm (D-58) |
+| `CHECKSUM_BINARY_ALGORITHMS`                | —                                                   | The algorithms it supports, comma-separated. Required with a binary      |
+| `CHECKSUM_BINARY_VERSION`                   | `unknown`                                           | Its version, named with every checksum                                   |
+| `CHECKSUM_ENV_*`                            | —                                                   | `CHECKSUM_ENV_<NAME>` is `<NAME>` in its environment, its only variables |
+| `DEVICE_*`                                  | —                                                   | Device tokens, each named by a registration's `secretRef` (D-38)         |
 
 ## Layout
 

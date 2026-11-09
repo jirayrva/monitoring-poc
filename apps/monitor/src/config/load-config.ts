@@ -58,9 +58,17 @@ const loadConfig = (env: Environment) => {
       intervalMs: read.number('MONITORING_INTERVAL_MS', 30_000),
       downProbeThreshold: read.number('MONITORING_DOWN_PROBE_THRESHOLD', 3, { min: 1, whole: true }),
       maxConcurrentProbes: read.number('MONITORING_MAX_CONCURRENT_PROBES', 250, { min: 1, whole: true }),
+      healthAttemptTimeoutMs: read.number('MONITORING_HEALTH_ATTEMPT_TIMEOUT_MS', 3000, { min: 1 }),
       healthBudgetMs: read.number('MONITORING_HEALTH_BUDGET_MS', 7000, { min: 1 }),
+      diagnosticsAttemptTimeoutMs: read.number('MONITORING_DIAGNOSTICS_ATTEMPT_TIMEOUT_MS', 3000, { min: 1 }),
       diagnosticsBudgetMs: read.number('MONITORING_DIAGNOSTICS_BUDGET_MS', 7000, { min: 1 }),
       checksumTimeoutMs: read.number('MONITORING_CHECKSUM_TIMEOUT_MS', 2000, { min: 1 }),
+      // One retry, after up to a second, fits the health budget (D-37).
+      retry: {
+        retries: read.number('MONITORING_RETRY_COUNT', 1, { whole: true }),
+        baseDelayMs: read.number('MONITORING_RETRY_BASE_DELAY_MS', 1000),
+        maxDelayMs: read.number('MONITORING_RETRY_MAX_DELAY_MS', 4000),
+      },
     },
     checksumGenerator: readChecksumGenerator(read, env),
   };

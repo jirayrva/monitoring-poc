@@ -1,3 +1,4 @@
+import { setTimeout as sleep } from 'node:timers/promises';
 import pMap from 'p-map';
 import type { RegisteredDevice } from '../../domain/device.ts';
 import type { DeviceCapabilities, Diagnostics } from '../../domain/device-report.ts';
@@ -11,12 +12,19 @@ import type { DeviceDiagnosticsReader } from '../../ports/driven/device-diagnost
 import type { DeviceHealthReader } from '../../ports/driven/device-health-reader.ts';
 import type { DeviceStatusDatastore } from '../../ports/driven/device-status-datastore.ts';
 import type { DeviceProbes, RoundStates } from '../../ports/driving/device-probes.ts';
-import type { CallOptions, StoreFailure } from '../../ports/types.ts';
+import type { CallOptions, Result, StoreFailure } from '../../ports/types.ts';
+import { retryDelay } from './retry-policy.ts';
+import type { Random, RetryPolicy } from './retry-policy.ts';
 
 type ProbePolicy = StatusPolicy & {
+  /** How long one health attempt may take, so a device that hangs leaves time for a retry. */
+  healthAttemptTimeoutMs: number;
   healthBudgetMs: number;
+  diagnosticsAttemptTimeoutMs: number;
   diagnosticsBudgetMs: number;
+  /** How long generating a checksum may take. It is not retried. */
   checksumTimeoutMs: number;
+  retry: RetryPolicy;
   maxConcurrentProbes: number;
 };
 
@@ -27,6 +35,7 @@ type DeviceProbesDependencies = {
   deviceDiagnosticsReaders: DeviceDiagnosticsReader[];
   checksumGenerator: ChecksumGenerator;
   now: () => Date;
+  random: Random;
   policy: ProbePolicy;
 };
 
@@ -34,13 +43,42 @@ const within = (options: CallOptions, timeoutMs: number): CallOptions => ({
   signal: AbortSignal.any([options.signal, AbortSignal.timeout(timeoutMs)]),
 });
 
+const noResponse = new Set(['unreachable', 'timeout', 'cut_off', 'gateway_error']);
+
+/** Whether asking again could get another answer: only after no response or a 5xx (D-35). */
+const isRetryable = (failure: { reason: string; httpStatus?: number }) =>
+  noResponse.has(failure.reason) || (failure.httpStatus ?? 0) >= 500;
+
 /** The longest a probe can take: its steps, one after the other. Stopping waits that long for one. */
 const probeBudgetMs = (policy: ProbePolicy) =>
   policy.healthBudgetMs + policy.diagnosticsBudgetMs + policy.checksumTimeoutMs;
 
 const createDeviceProbes = (dependencies: DeviceProbesDependencies): DeviceProbes => {
-  const { deviceDatastore, deviceStatusDatastore, deviceHealthReader, now, policy } = dependencies;
+  const { deviceDatastore, deviceStatusDatastore, deviceHealthReader, now, random, policy } = dependencies;
   const { deviceDiagnosticsReaders, checksumGenerator } = dependencies;
+
+  /**
+   * Calls the device, retrying per the policy, each attempt within its timeout and all of them within the step's
+   * budget (D-37). A wait that the budget or the caller's signal ends ends the retries.
+   */
+  const callWithRetries = async <Value, Failure extends { reason: string }>(
+    call: (options: CallOptions) => Promise<Result<Value, Failure>>,
+    limits: { attemptTimeoutMs: number; budgetMs: number },
+    options: CallOptions,
+  ) => {
+    const step = within(options, limits.budgetMs);
+    const attempt = () => call(within(step, limits.attemptTimeoutMs));
+    let result = await attempt();
+    for (let retry = 0; !result.ok && isRetryable(result.failure); retry++) {
+      const delay = retryDelay(policy.retry, retry, random);
+      const waited = delay !== undefined && (await sleep(delay, true, step).catch(() => false));
+      if (!waited) {
+        return result;
+      }
+      result = await attempt();
+    }
+    return result;
+  };
 
   /** The device's most preferred protocol that the monitor speaks, in that version (Q-04). */
   const pickProtocol = ({ protocols }: DeviceCapabilities) => {
@@ -70,9 +108,10 @@ const createDeviceProbes = (dependencies: DeviceProbesDependencies): DeviceProbe
     }
 
     const { reader, port } = picked;
-    const read = await reader.readDiagnostics(
-      { registration: device, port },
-      within(options, policy.diagnosticsBudgetMs),
+    const read = await callWithRetries(
+      (callOptions) => reader.readDiagnostics({ registration: device, port }, callOptions),
+      { attemptTimeoutMs: policy.diagnosticsAttemptTimeoutMs, budgetMs: policy.diagnosticsBudgetMs },
+      options,
     );
     if (!read.ok) {
       return { state: 'unavailable', ...read.failure };
@@ -100,9 +139,10 @@ const createDeviceProbes = (dependencies: DeviceProbesDependencies): DeviceProbe
   const probe = async (device: RegisteredDevice, options: CallOptions): Promise<ProbeOutcome> => {
     const probedAt = now();
     const timing = () => ({ probedAt, durationMs: now().getTime() - probedAt.getTime() });
-    const health = await deviceHealthReader.readHealth(
-      { registration: device },
-      within(options, policy.healthBudgetMs),
+    const health = await callWithRetries(
+      (callOptions) => deviceHealthReader.readHealth({ registration: device }, callOptions),
+      { attemptTimeoutMs: policy.healthAttemptTimeoutMs, budgetMs: policy.healthBudgetMs },
+      options,
     );
     if (!health.ok) {
       return { ...health.failure, ...timing() };

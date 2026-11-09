@@ -32,9 +32,12 @@ describe('loadConfig', () => {
         intervalMs: 30_000,
         downProbeThreshold: 3,
         maxConcurrentProbes: 250,
+        healthAttemptTimeoutMs: 3000,
         healthBudgetMs: 7000,
+        diagnosticsAttemptTimeoutMs: 3000,
         diagnosticsBudgetMs: 7000,
         checksumTimeoutMs: 2000,
+        retry: { retries: 1, baseDelayMs: 1000, maxDelayMs: 4000 },
       },
       checksumGenerator: { kind: 'stand-in' },
     });
@@ -137,6 +140,18 @@ describe('loadConfig', () => {
     // Assert
     assert.deepEqual(problems, ['MONITORING_MAX_CONCURRENT_PROBES must be a whole number of 1 or more, not "0"']);
   });
+  it('reads the retry settings', () => {
+    // Act
+    const config = loadConfig({
+      MONITORING_RETRY_COUNT: '2',
+      MONITORING_RETRY_BASE_DELAY_MS: '500',
+      MONITORING_RETRY_MAX_DELAY_MS: '800',
+    });
+
+    // Assert
+    assert.deepEqual(config.monitoring.retry, { retries: 2, baseDelayMs: 500, maxDelayMs: 800 });
+  });
+
   describe('checksum generator', () => {
     // Any executable file will do: loadConfig only checks that it can be run.
     const binary = process.execPath;

@@ -14,11 +14,15 @@ import {
 import { createApiHttp } from './adapters/driving/api-http/index.ts';
 import { createHeartbeat } from './adapters/driving/heartbeat/index.ts';
 import { config, readDeviceSecret } from './config/index.ts';
+import { checkTimings } from './config/timing-checks.ts';
 import { probeBudgetMs } from './core/application/device-probes/index.ts';
 import { createApplication } from './core/application/index.ts';
 import { migrateDatabase } from './infrastructure/postgres/migrate.ts';
 
 const logger = pino({ level: config.logLevel });
+for (const warning of checkTimings(config.monitoring)) {
+  logger.warn({}, warning);
+}
 
 const checksumGenerator =
   config.checksumGenerator.kind === 'binary'
@@ -36,6 +40,7 @@ const { deviceRegistry, deviceStatusQueries, deviceProbes } = createApplication(
   deviceDiagnosticsReaders: [createDeviceDiagnosticsReaderRest({ readSecret: readDeviceSecret })],
   checksumGenerator,
   now: () => new Date(),
+  random: Math.random,
   policy: config.monitoring,
 });
 const apiHttp = createApiHttp({ deviceRegistry, deviceStatusQueries, config });

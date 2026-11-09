@@ -15,6 +15,7 @@ const application = createApplication({
   deviceDiagnosticsReaders: [],
   checksumGenerator: createChecksumGeneratorStandIn(),
   now: () => new Date(),
+  random: Math.random,
   policy: config.monitoring,
 });
 const server = createApiHttp({ ...application, config });

@@ -70,6 +70,7 @@ const startServerOn = async (t: TestContext, deviceDatastore: DeviceDatastore, .
     deviceDiagnosticsReaders: [],
     checksumGenerator: createChecksumGeneratorStandIn(),
     now: () => registeredAt,
+    random: Math.random,
     policy: loadConfig({}).monitoring,
   });
   const server = createApiHttp({ ...application, config: { host: '127.0.0.1', port: 0, logLevel: 'silent' } });
