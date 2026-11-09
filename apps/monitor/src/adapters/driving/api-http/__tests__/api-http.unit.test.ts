@@ -299,6 +299,49 @@ describe('GET /v1/device-statuses', () => {
   });
 });
 
+describe('monitoring', () => {
+  it('GET /v1/monitoring returns running when the service starts', async (t) => {
+    // Arrange
+    const api = await startServer(t);
+
+    // Act
+    const response = await api.request('GET', '/monitoring');
+
+    // Assert
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), samples.getMonitoringStateResult.valid.running);
+  });
+
+  it('POST /v1/monitoring/stop returns 204 with no body, and stops monitoring', async (t) => {
+    // Arrange
+    const api = await startServer(t);
+
+    // Act
+    const response = await api.request('POST', '/monitoring/stop');
+
+    // Assert
+    assert.equal(response.status, 204);
+    assert.equal(await response.text(), '');
+    const state = await api.request('GET', '/monitoring');
+    assert.deepEqual(await state.json(), samples.getMonitoringStateResult.valid.stopped);
+  });
+
+  it('POST /v1/monitoring/start returns 204 with no body, and runs monitoring again', async (t) => {
+    // Arrange
+    const api = await startServer(t);
+    await api.request('POST', '/monitoring/stop');
+
+    // Act
+    const response = await api.request('POST', '/monitoring/start');
+
+    // Assert
+    assert.equal(response.status, 204);
+    assert.equal(await response.text(), '');
+    const state = await api.request('GET', '/monitoring');
+    assert.deepEqual(await state.json(), samples.getMonitoringStateResult.valid.running);
+  });
+});
+
 const routes: { method: string; path: string; body?: unknown; storeCall: keyof DeviceDatastore }[] = [
   { method: 'GET', path: '/devices', storeCall: 'listDevices' },
   { method: 'GET', path: '/device-statuses', storeCall: 'listDevices' },

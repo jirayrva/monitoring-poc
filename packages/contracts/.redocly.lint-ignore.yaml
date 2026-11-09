@@ -4,3 +4,6 @@ monitor-api/openapi.json:
   operation-4xx-response:
     - '#/paths/~1v1~1devices/get/responses'
     - '#/paths/~1v1~1device-statuses/get/responses'
+    - '#/paths/~1v1~1monitoring/get/responses'
+    - '#/paths/~1v1~1monitoring~1start/post/responses'
+    - '#/paths/~1v1~1monitoring~1stop/post/responses'

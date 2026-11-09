@@ -401,6 +401,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-51 | `pg` and `node-pg-migrate`. Each Postgres adapter owns its migrations, applied as one sequence | I-03, I-10       |
 | D-52 | Integration tests run on Compose's Postgres, each in a schema of its own                       | R-17             |
 | D-58 | `{algorithm}` in the binary's arguments names the algorithm, from a list it supports           | R-14, I-05       |
+| D-59 | Starting and stopping monitoring are actions: `POST /v1/monitoring/start` and `/stop`          | R-16             |
 
 ## 4 Not doing (yet)
 

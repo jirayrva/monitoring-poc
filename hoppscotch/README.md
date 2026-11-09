@@ -23,4 +23,5 @@ monitor:
 pnpm dlx @hoppscotch/cli@0.31.4 test hoppscotch/device-monitor.collection.json -e hoppscotch/local.environment.json
 ```
 
-It registers `deviceId`, changes it and unregisters it again, so it leaves the monitor as it found it.
+It registers `deviceId`, changes it and unregisters it again, then stops and starts monitoring. So it leaves the
+monitor as it found it, unless monitoring was stopped.

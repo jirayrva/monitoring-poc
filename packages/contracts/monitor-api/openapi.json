@@ -744,6 +744,19 @@
           }
         ]
       },
+      "get-monitoring-state-result": {
+        "title": "Monitoring state",
+        "description": "Result of getMonitoringState: whether devices are probed. Stopping lasts until the round in progress ends.",
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["state"],
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": ["running", "stopping", "stopped"]
+          }
+        }
+      },
       "list-devices-result": {
         "title": "List devices",
         "type": "object",
@@ -1109,6 +1122,49 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/v1/monitoring": {
+      "get": {
+        "operationId": "getMonitoringState",
+        "summary": "Get the monitoring state",
+        "description": "Returns whether devices are probed: running, stopping until the round in progress ends, or stopped.",
+        "responses": {
+          "200": {
+            "description": "Result of getMonitoringState: whether devices are probed. Stopping lasts until the round in progress ends.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/get-monitoring-state-result"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/monitoring/start": {
+      "post": {
+        "operationId": "startMonitoring",
+        "summary": "Start monitoring",
+        "description": "Probing resumes with the next round. Does nothing while running.",
+        "responses": {
+          "204": {
+            "description": "Monitoring is running."
+          }
+        }
+      }
+    },
+    "/v1/monitoring/stop": {
+      "post": {
+        "operationId": "stopMonitoring",
+        "summary": "Stop monitoring",
+        "description": "Lets the round in progress finish, stopping then, and starts no other. Does nothing once stopped.",
+        "responses": {
+          "204": {
+            "description": "Monitoring is stopping, or stopped."
           }
         }
       }

@@ -13,6 +13,7 @@ import type {
   HealthReport,
 } from '../../../ports/driven/device-health-reader.ts';
 import type { DeviceStatusDatastore } from '../../../ports/driven/device-status-datastore.ts';
+import { createMonitoring } from '../../monitoring/index.ts';
 import { createDeviceProbes, probeBudgetMs } from '../index.ts';
 import type { RetryPolicy } from '../retry-policy.ts';
 
@@ -112,6 +113,7 @@ const setUp = (overrides: SetUp = {}) => {
   const { devices = [lobbyDevice], statuses = [], readHealth = answering } = overrides;
   const appended: DeviceStatus[] = [];
   let seconds = 0;
+  const { monitoring, rounds } = createMonitoring();
   const deviceProbes = createDeviceProbes({
     deviceDatastore: {
       listDevices: typeof devices === 'function' ? devices : () => ok(devices),
@@ -132,6 +134,7 @@ const setUp = (overrides: SetUp = {}) => {
     deviceHealthReader: { readHealth },
     deviceDiagnosticsReaders: overrides.readers ?? [],
     checksumGenerator: { info: generator, generateChecksum: overrides.generateChecksum ?? generatingAbc },
+    rounds,
     now: overrides.now ?? (() => at(seconds++)),
     // Every wait at its longest, so tests can time them.
     random: () => 1,
@@ -146,7 +149,7 @@ const setUp = (overrides: SetUp = {}) => {
       checksumTimeoutMs: overrides.checksumTimeoutMs ?? 1000,
     },
   });
-  return { deviceProbes, appended };
+  return { deviceProbes, appended, monitoring };
 };
 
 const none = { up: 0, suspect: 0, down: 0, misconfigured: 0 };
@@ -381,6 +384,64 @@ describe('probeDevices', () => {
 
     // Assert
     assert.equal(probes, 1);
+  });
+
+  describe('while monitoring is stopped', () => {
+    it('skips the round, probing nothing', async () => {
+      // Arrange
+      let probes = 0;
+      const { deviceProbes, appended, monitoring } = setUp({
+        readHealth: (input, callOptions) => {
+          probes += 1;
+          return answering(input, callOptions);
+        },
+      });
+      monitoring.stopMonitoring({});
+
+      // Act
+      const result = await deviceProbes.probeDevices({}, options);
+
+      // Assert
+      assert.deepEqual(result, { ok: true, value: { round: 'skipped' } });
+      assert.equal(probes, 0);
+      assert.deepEqual(appended, []);
+    });
+
+    it('finishes the round in progress when stopped during it, then is stopped', async () => {
+      // Arrange
+      const states: string[] = [];
+      const setup = setUp({
+        readHealth: (input, callOptions) => {
+          setup.monitoring.stopMonitoring({});
+          states.push(setup.monitoring.getMonitoringState({}).state);
+          return answering(input, callOptions);
+        },
+      });
+
+      // Act
+      const result = await setup.deviceProbes.probeDevices({}, options);
+
+      // Assert
+      assert.deepEqual(result, { ok: true, value: { round: 'completed', states: { ...none, up: 1 } } });
+      assert.deepEqual(states, ['stopping']);
+      assert.deepEqual(setup.monitoring.getMonitoringState({}), { state: 'stopped' });
+    });
+
+    it('is stopped after a round that threw', async () => {
+      // Arrange
+      const setup = setUp({
+        devices: () => {
+          setup.monitoring.stopMonitoring({});
+          return Promise.reject(new Error('a bug'));
+        },
+      });
+
+      // Act
+      await assert.rejects(setup.deviceProbes.probeDevices({}, options));
+
+      // Assert
+      assert.deepEqual(setup.monitoring.getMonitoringState({}), { state: 'stopped' });
+    });
   });
 
   describe('health retries', () => {

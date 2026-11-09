@@ -7,15 +7,18 @@ import apiReference from '@scalar/fastify-api-reference';
 import Fastify from 'fastify';
 import type { DeviceRegistry } from '../../../core/ports/driving/device-registry.ts';
 import type { DeviceStatusQueries } from '../../../core/ports/driving/device-status-queries.ts';
+import type { Monitoring } from '../../../core/ports/driving/monitoring.ts';
 import { completeApiError, errorHandler, notFoundHandler } from './error-handlers.ts';
 import { registerDeviceRegistryRoutes } from './routes/device-registry.ts';
 import { registerDeviceStatusQueriesRoutes } from './routes/device-status-queries.ts';
+import { registerMonitoringRoutes } from './routes/monitoring.ts';
 
 type ApiHttpConfig = { host: string; port: number; logLevel: string };
 
 type ApiHttpDependencies = {
   deviceRegistry: DeviceRegistry;
   deviceStatusQueries: DeviceStatusQueries;
+  monitoring: Monitoring;
   config: ApiHttpConfig;
 };
 
@@ -34,7 +37,7 @@ const schemaFileSuffix = '.schema.json';
 const apiPrefix = '/v1';
 
 const createApiHttp: ApiHttpFactory = (dependencies) => {
-  const { deviceRegistry, deviceStatusQueries, config } = dependencies;
+  const { deviceRegistry, deviceStatusQueries, monitoring, config } = dependencies;
   const { host, port, logLevel } = config;
   const server = Fastify({
     logger: { level: logLevel },
@@ -76,6 +79,7 @@ const createApiHttp: ApiHttpFactory = (dependencies) => {
     (instance, _options, done) => {
       registerDeviceRegistryRoutes(instance, deviceRegistry);
       registerDeviceStatusQueriesRoutes(instance, deviceStatusQueries);
+      registerMonitoringRoutes(instance, monitoring);
       done();
     },
     { prefix: apiPrefix },

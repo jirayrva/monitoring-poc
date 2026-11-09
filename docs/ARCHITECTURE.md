@@ -15,7 +15,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 |---------------------------|---------|----------------------------------------------------|-------------------------------------------------------------------------|
 | `DeviceRegistry`          | driving | Registers and unregisters devices                  | `api-http`                                                              |
 | `DeviceStatusQueries`     | driving | Reads the latest status of every registered device | `api-http`                                                              |
-| `Monitoring`              | driving | Starts and stops monitoring                        | none yet                                                                |
+| `Monitoring`              | driving | Starts and stops monitoring                        | `api-http`                                                              |
 | `DeviceProbes`            | driving | Probes every registered device                     | `heartbeat`                                                             |
 | `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory`               |
 | `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | `device-status-datastore-postgres`, `device-status-datastore-in-memory` |
@@ -79,6 +79,8 @@ One driving port per concern, typed in `core/ports/driving/`. The HTTP API drive
 - Device lists are not paged: up to about a thousand (Q-20).
 - Device list changes apply from the next round, without a restart (R-09).
 - Monitoring starts `running` with the service, so the demo needs no extra step (D-31).
+- `DeviceProbes` asks `Monitoring` before a round, and returns `skipped` unless running. When a round ends,
+  `stopping` becomes `stopped`.
 
 Driven ports, typed in `core/ports/driven/` with the domain model (D-25).
 
@@ -118,6 +120,8 @@ routes, and served with an API reference at `/docs/` (D-50).
 - Collections are plural nouns: `/v1/devices`, with `/v1/devices/{deviceId}` for one device, and `/v1/device-statuses`
   for the latest status of every device. It is not under `/v1/devices/`, where its name would take a path a device ID
   could need.
+- Monitoring is one resource, `/v1/monitoring`, read with `GET`. Starting and stopping are actions,
+  `POST /v1/monitoring/start` and `/stop`, not a state to set: a stop goes through `stopping` (D-59).
 - Values such as a status's `state` stay lowercase, `up` rather than `ONLINE`.
 - An error answers with a `code`, such as `device_not_found`, a `message`, and `details` when there are any, plus the
   HTTP `statusCode` and its `statusName`, such as `NOT_FOUND`, the `requestPath`, the `requestId` and the `timestamp`.

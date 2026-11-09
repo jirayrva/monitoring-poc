@@ -33,7 +33,7 @@ await migrateDatabase({ ...config.datastore, dirs: [deviceDatastoreMigrations, d
 
 const deviceDatastore = createDeviceDatastorePostgres(config.datastore);
 const deviceStatusDatastore = createDeviceStatusDatastorePostgres(config.datastore);
-const { deviceRegistry, deviceStatusQueries, deviceProbes } = createApplication({
+const { deviceRegistry, deviceStatusQueries, monitoring, deviceProbes } = createApplication({
   deviceDatastore,
   deviceStatusDatastore,
   deviceHealthReader: createDeviceHealthReaderHttp({ readSecret: readDeviceSecret }),
@@ -43,7 +43,7 @@ const { deviceRegistry, deviceStatusQueries, deviceProbes } = createApplication(
   random: Math.random,
   policy: config.monitoring,
 });
-const apiHttp = createApiHttp({ deviceRegistry, deviceStatusQueries, config });
+const apiHttp = createApiHttp({ deviceRegistry, deviceStatusQueries, monitoring, config });
 const heartbeat = createHeartbeat({
   deviceProbes,
   logger,

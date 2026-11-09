@@ -11,8 +11,9 @@ import type { DeviceDatastore } from '../../ports/driven/device-datastore.ts';
 import type { DeviceDiagnosticsReader } from '../../ports/driven/device-diagnostics-reader.ts';
 import type { DeviceHealthReader } from '../../ports/driven/device-health-reader.ts';
 import type { DeviceStatusDatastore } from '../../ports/driven/device-status-datastore.ts';
-import type { DeviceProbes, RoundStates } from '../../ports/driving/device-probes.ts';
+import type { DeviceProbes, ProbeDevicesOutput, RoundStates } from '../../ports/driving/device-probes.ts';
 import type { CallOptions, Result, StoreFailure } from '../../ports/types.ts';
+import type { MonitoringRounds } from '../monitoring/index.ts';
 import { retryDelay } from './retry-policy.ts';
 import type { Random, RetryPolicy } from './retry-policy.ts';
 
@@ -34,6 +35,7 @@ type DeviceProbesDependencies = {
   deviceHealthReader: DeviceHealthReader;
   deviceDiagnosticsReaders: DeviceDiagnosticsReader[];
   checksumGenerator: ChecksumGenerator;
+  rounds: MonitoringRounds;
   now: () => Date;
   random: Random;
   policy: ProbePolicy;
@@ -54,7 +56,7 @@ const probeBudgetMs = (policy: ProbePolicy) =>
   policy.healthBudgetMs + policy.diagnosticsBudgetMs + policy.checksumTimeoutMs;
 
 const createDeviceProbes = (dependencies: DeviceProbesDependencies): DeviceProbes => {
-  const { deviceDatastore, deviceStatusDatastore, deviceHealthReader, now, random, policy } = dependencies;
+  const { deviceDatastore, deviceStatusDatastore, deviceHealthReader, rounds, now, random, policy } = dependencies;
   const { deviceDiagnosticsReaders, checksumGenerator } = dependencies;
 
   /**
@@ -158,50 +160,62 @@ const createDeviceProbes = (dependencies: DeviceProbesDependencies): DeviceProbe
     return { response: 'expected', ...timing(), health: reportedHealth, capabilities, diagnostics };
   };
 
+  const probeRound = async (options: CallOptions): Promise<ProbeDevicesOutput> => {
+    const devices = await deviceDatastore.listDevices({}, options);
+    if (!devices.ok) {
+      return devices;
+    }
+
+    const statuses = await deviceStatusDatastore.listLatestStatuses({}, options);
+    if (!statuses.ok) {
+      return statuses;
+    }
+
+    const latest = new Map(statuses.value.map((status) => [status.deviceId, status]));
+    const failures: StoreFailure[] = [];
+    const states: RoundStates = { up: 0, suspect: 0, down: 0, misconfigured: 0 };
+    const probeAndRecord = async (device: RegisteredDevice) => {
+      const outcome = await probe(device, options);
+      if (options.signal.aborted) {
+        return;
+      }
+
+      const previous: DeviceStatus = latest.get(device.deviceId) ?? registeredStatus(device);
+      const status = nextStatus({ device, previous, outcome }, policy);
+      const appended = await deviceStatusDatastore.appendStatus({ status }, options);
+      if (appended.ok) {
+        states[status.state] += 1;
+      } else {
+        failures.push(appended.failure);
+      }
+    };
+
+    // An abort stops new probes from starting, and is no failure: the round reports what it recorded.
+    await pMap(devices.value, probeAndRecord, {
+      concurrency: policy.maxConcurrentProbes,
+      signal: options.signal,
+    }).catch((error: unknown) => {
+      if (!options.signal.aborted) {
+        throw error;
+      }
+    });
+
+    // The other devices' statuses are recorded, but the round reports the store failing.
+    const [failure] = failures;
+    return failure === undefined ? { ok: true, value: { round: 'completed', states } } : { ok: false, failure };
+  };
+
   return {
     probeDevices: async (_input, options) => {
-      const devices = await deviceDatastore.listDevices({}, options);
-      if (!devices.ok) {
-        return devices;
+      if (!rounds.startRound()) {
+        return { ok: true, value: { round: 'skipped' } };
       }
 
-      const statuses = await deviceStatusDatastore.listLatestStatuses({}, options);
-      if (!statuses.ok) {
-        return statuses;
+      try {
+        return await probeRound(options);
+      } finally {
+        rounds.endRound();
       }
-
-      const latest = new Map(statuses.value.map((status) => [status.deviceId, status]));
-      const failures: StoreFailure[] = [];
-      const states: RoundStates = { up: 0, suspect: 0, down: 0, misconfigured: 0 };
-      const probeAndRecord = async (device: RegisteredDevice) => {
-        const outcome = await probe(device, options);
-        if (options.signal.aborted) {
-          return;
-        }
-
-        const previous: DeviceStatus = latest.get(device.deviceId) ?? registeredStatus(device);
-        const status = nextStatus({ device, previous, outcome }, policy);
-        const appended = await deviceStatusDatastore.appendStatus({ status }, options);
-        if (appended.ok) {
-          states[status.state] += 1;
-        } else {
-          failures.push(appended.failure);
-        }
-      };
-
-      // An abort stops new probes from starting, and is no failure: the round reports what it recorded.
-      await pMap(devices.value, probeAndRecord, {
-        concurrency: policy.maxConcurrentProbes,
-        signal: options.signal,
-      }).catch((error: unknown) => {
-        if (!options.signal.aborted) {
-          throw error;
-        }
-      });
-
-      // The other devices' statuses are recorded, but the round reports the store failing.
-      const [failure] = failures;
-      return failure === undefined ? { ok: true, value: { round: 'completed', states } } : { ok: false, failure };
     },
   };
 };

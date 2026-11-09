@@ -126,6 +126,66 @@
             "contentType": null,
             "body": null
           }
+        },
+        {
+          "v": "8",
+          "name": "Get the monitoring state",
+          "method": "GET",
+          "endpoint": "<<monitor>>/v1/monitoring",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
+          "name": "Stop monitoring",
+          "method": "POST",
+          "endpoint": "<<monitor>>/v1/monitoring/stop",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 204\", () => {\n  pw.expect(pw.response.status === 204).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
+          "name": "Start monitoring",
+          "method": "POST",
+          "endpoint": "<<monitor>>/v1/monitoring/start",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 204\", () => {\n  pw.expect(pw.response.status === 204).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
         }
       ],
       "auth": {

@@ -1,0 +1,12 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "get-monitoring-state-result.schema.json",
+  "title": "Monitoring state",
+  "description": "Result of getMonitoringState: whether devices are probed. Stopping lasts until the round in progress ends.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["state"],
+  "properties": {
+    "state": { "type": "string", "enum": ["running", "stopping", "stopped"] }
+  }
+}
