@@ -19,4 +19,13 @@ const diagnosticsSchema: Record<string, unknown> = JSON.parse(
 /** The header of a diagnostics answer that carries the checksum of its body, in hex (Q-06). */
 const diagnosticsChecksumHeader = 'diagnostics-checksum';
 
-export { diagnosticsChecksumHeader, diagnosticsSchema, healthSchema, samplesDirectory, schemaDirectory };
+const diagnosticsProtoPath = join(import.meta.dirname, 'proto', 'diagnostics.proto');
+
+export {
+  diagnosticsChecksumHeader,
+  diagnosticsProtoPath,
+  diagnosticsSchema,
+  healthSchema,
+  samplesDirectory,
+  schemaDirectory,
+};

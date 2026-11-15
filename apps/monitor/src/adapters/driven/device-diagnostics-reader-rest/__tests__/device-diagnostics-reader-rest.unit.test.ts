@@ -65,7 +65,10 @@ const arrangeDevice = async (t: TestContext, device: FakeDevice, secrets: Record
   return { reader, baseUrl: 'http://127.0.0.1:9', port: portOf(await startServer(t, handlerFor(device))) };
 };
 
-testDeviceDiagnosticsReaderContract('rest', arrangeDevice);
+testDeviceDiagnosticsReaderContract('rest', arrangeDevice, {
+  fails: 'http_error',
+  behindFailingGateway: 'gateway_error',
+});
 
 describe('DeviceDiagnosticsReader over REST', () => {
   const options = { signal: AbortSignal.timeout(5000) };

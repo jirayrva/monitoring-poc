@@ -41,7 +41,13 @@ const reported: Reported = {
 
 const bearer: AuthProfile = { strategy: 'bearer', secretRef: 'DEVICE_LOBBY_TOKEN' };
 
-const testDeviceDiagnosticsReaderContract = (adapterName: string, arrangeDevice: ArrangeDevice) => {
+type ProtocolReasons = { fails: string; behindFailingGateway: string };
+
+const testDeviceDiagnosticsReaderContract = (
+  adapterName: string,
+  arrangeDevice: ArrangeDevice,
+  reasons: ProtocolReasons,
+) => {
   const readFrom = async (t: TestContext, device: FakeDevice, auth: AuthProfile = lobby.auth, secrets = {}) => {
     const { reader, baseUrl, port } = await arrangeDevice(t, device, secrets);
     const result = await reader.readDiagnostics({ registration: { ...lobby, baseUrl, auth }, port }, options);
@@ -86,8 +92,12 @@ const testDeviceDiagnosticsReaderContract = (adapterName: string, arrangeDevice:
         { behavior: 'answers_nonsense' },
         'not_a_device_answer',
       ],
-      ['http_error when the device fails', { behavior: 'fails' }, 'http_error'],
-      ['gateway_error when a gateway answers for the device', { behavior: 'behind_failing_gateway' }, 'gateway_error'],
+      [`${reasons.fails} when the device fails`, { behavior: 'fails' }, reasons.fails],
+      [
+        `${reasons.behindFailingGateway} when a gateway answers for the device`,
+        { behavior: 'behind_failing_gateway' },
+        reasons.behindFailingGateway,
+      ],
     ];
     for (const [name, device, reason] of failures) {
       it(`reports ${name}, with the protocol and its status`, async (t) => {
@@ -136,4 +146,4 @@ const testDeviceDiagnosticsReaderContract = (adapterName: string, arrangeDevice:
 };
 
 export { testDeviceDiagnosticsReaderContract };
-export type { ArrangeDevice, FakeDevice, Reported };
+export type { ArrangeDevice, FakeDevice, ProtocolReasons, Reported };

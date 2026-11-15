@@ -409,6 +409,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-65 | End-to-end tests run the whole stack in Compose, under a project of their own                  | R-16, R-17       |
 | D-66 | A Caddy gateway serves the dashboard and both APIs on one origin: no CORS, one port            | R-19, R-20       |
 | D-67 | The dashboard is one HTML file, with no build and no framework, polling every 2 s              | R-20, I-09       |
+| D-68 | gRPC diagnostics carry the REST JSON and its checksum. The proto is loaded at runtime          | R-05, I-04       |
 
 ## 4 Not doing (yet)
 

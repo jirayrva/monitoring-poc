@@ -1,0 +1,22 @@
+// The device API's diagnostics over gRPC, as the monitor assumes it (Q-01, Q-02): on the port a device gives for grpc.
+// The answer carries the same JSON document a REST answer's body does, and the checksum of exactly those bytes, so one
+// schema checks both and one rule covers their checksum (Q-06).
+syntax = "proto3";
+
+package device.v1;
+
+service Diagnostics {
+  rpc GetDiagnostics(GetDiagnosticsRequest) returns (GetDiagnosticsReply);
+}
+
+message GetDiagnosticsRequest {
+  // The device expected, so one server can answer for several devices, and none answers for another.
+  string device_id = 1;
+}
+
+message GetDiagnosticsReply {
+  // The diagnostics, as diagnostics.schema.json has them, in UTF-8 JSON.
+  bytes diagnostics = 1;
+  // The checksum of exactly the diagnostics bytes, in hex, in the algorithm from the device's health answer.
+  string checksum = 2;
+}

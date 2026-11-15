@@ -20,7 +20,7 @@ The monitor follows Ports and Adapters (D-21). In `apps/monitor/src`:
 | `DeviceDatastore`         | driven  | Stores the registered devices                      | `device-datastore-postgres`, `device-datastore-in-memory`               |
 | `DeviceStatusDatastore`   | driven  | Stores status of devices including diagnostics     | `device-status-datastore-postgres`, `device-status-datastore-in-memory` |
 | `DeviceHealthReader`      | driven  | Reads a device's health and capabilities           | `device-health-reader-http`                                             |
-| `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | `device-diagnostics-reader-rest`                                        |
+| `DeviceDiagnosticsReader` | driven  | Reads a device's diagnostics, in one protocol      | `device-diagnostics-reader-rest`, `device-diagnostics-reader-grpc`      |
 | `ChecksumGenerator`       | driven  | Generates the checksum of a device's answer        | `checksum-generator-process`, `checksum-generator-stand-in`             |
 
 ## Data concepts
@@ -145,6 +145,13 @@ it knows which answers show a misconfiguration.
 - Diagnostics over REST is `GET /v1/diagnostics` on the base URL, with the port the device gives for `rest`. The
   body is the diagnostics, and the `Diagnostics-Checksum` header their checksum in hex, so the payload checksummed is
   exactly the body (Q-06). Fields the schema does not know go no further, but the checksum covers them.
+- Diagnostics over gRPC is `device.v1.Diagnostics/GetDiagnostics`, in `device-api/proto/diagnostics.proto`, on the
+  base URL's host with the port the device gives for `grpc`, over TLS when the base URL is `https`. The request names
+  the device. The answer carries the same JSON a REST body does, and the checksum of exactly those bytes, so one schema
+  and one checksum rule serve both (D-68). The token goes in the `authorization` metadata. Every call ends with a gRPC
+  status: `UNAUTHENTICATED` or `PERMISSION_DENIED` is `auth_failed`, `UNAVAILABLE` is `unreachable` or `tls_failed`,
+  `RESOURCE_EXHAUSTED` is `too_large`, and any other is `error_status`. grpc-js refuses TLS to an IP address, so a
+  gRPC device on `https` needs a host name.
 - Bearer auth sends the token from the setting its `secretRef` names (D-38). A token that is not set, or set to
   nothing, is `token_missing`, and the device is not called.
 - A redirect is not followed, and is an `http_error`, so a token never goes to another host.

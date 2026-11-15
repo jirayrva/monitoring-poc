@@ -2,3 +2,8 @@ packages:
   - apps/*
   - packages/*
   - tooling/*
+
+# Dependencies' build scripts, each allowed or denied explicitly, so an install never runs one unreviewed.
+allowBuilds:
+  # Its postinstall only checks the versions of its command-line tools, which nothing here uses.
+  protobufjs: false
