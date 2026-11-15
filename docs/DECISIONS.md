@@ -406,6 +406,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-61 | Compose runs the whole stack. The image is Debian slim, as a vendor binary likely needs glibc  | R-14, R-18, R-19 |
 | D-62 | A simulator plays devices, each way it misbehaves a failure the monitor must tell apart        | R-17, I-02       |
 | D-64 | The simulator registers its demo devices with the monitor as it starts: no one-shot seed       | R-19, I-02       |
+| D-65 | End-to-end tests run the whole stack in Compose, under a project of their own                  | R-16, R-17       |
 
 ## 4 Not doing (yet)
 

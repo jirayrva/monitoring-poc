@@ -40,6 +40,7 @@ first, as in `test:unit`, so related ones sort together.
 | `pnpm test`               | Runs all tests                                                                     |
 | `pnpm test:unit`          | Runs `*.unit.test.ts`, which need nothing running                                  |
 | `pnpm test:integration`   | Runs `*.integration.test.ts`, which need the services they talk to                 |
+| `pnpm test:e2e`           | Runs the end-to-end tests against the whole stack in Compose. Needs only Docker    |
 | `pnpm fleet:add [size]`   | Adds a fleet of simulated devices, 1001 unless given, to the running stack         |
 | `pnpm fleet:remove`       | Removes the fleet from the running stack                                           |
 | `pnpm deps:up`            | Starts only Postgres, in Compose, and waits until it is ready                      |
@@ -120,6 +121,11 @@ Node's test runner runs them, and the file name says which kind a test is (D-11)
 
 - `*.unit.test.ts` need nothing running.
 - `*.integration.test.ts` need the services they talk to.
+- `*.e2e.test.ts`, in `apps/monitor/e2e/`, build and start the whole stack, as `docker compose up` does, and reach it
+  only from outside: the monitor's API, the simulator's control API, and psql for the history only the database
+  holds (D-65). They run under their own Compose project, with free ports and short times from `compose.e2e.yaml`,
+  so a stack you are running is left alone, and remove the stack, its data and images afterwards. The monitor makes
+  checksums with a binary there, a Node script, through the process adapter, as it will with the vendor's (R-16).
 
 `tooling/sanity.unit.test.ts` stays, so the tools always have a file to work on (D-12).
 
@@ -150,7 +156,8 @@ the same thing.
   runs unit tests when files they cover changed. Unstaged edits are set aside meanwhile, so only what is committed is
   checked.
 - Pre-push and CI: `pnpm check`. GitHub Actions runs it on every pull request and push to `main` (D-20).
-- CI then starts Postgres with Compose and runs the integration tests (D-20).
+- CI then starts Postgres with Compose and runs the integration tests (D-20). A separate job runs the end-to-end
+  tests, so `pnpm check` stays fast.
 
 ## Commits
 

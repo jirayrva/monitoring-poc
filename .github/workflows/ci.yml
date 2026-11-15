@@ -19,3 +19,13 @@ jobs:
       - run: pnpm check
       - run: pnpm deps:up
       - run: pnpm test:integration
+
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: jdx/mise-action@v5.2.6
+      - run: pnpm install --frozen-lockfile
+      # Builds and starts the whole stack in Compose, as docker compose up does.
+      - run: pnpm test:e2e

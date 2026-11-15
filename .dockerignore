@@ -2,6 +2,7 @@
 **/node_modules
 **/__tests__
 **/testing
+**/e2e
 .git
 .github
 .plan

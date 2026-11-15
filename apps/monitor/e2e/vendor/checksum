@@ -1,0 +1,7 @@
+#!/usr/local/bin/node
+// A checksum binary for the end-to-end tests, run by the monitor as the vendor's will be: the payload on stdin, the
+// checksum in hex on stdout. Node rather than sha256sum, which not every OS has (I-06).
+import { createHash } from 'node:crypto';
+import { buffer } from 'node:stream/consumers';
+
+process.stdout.write(`${createHash(process.argv[2] ?? 'sha256').update(await buffer(process.stdin)).digest('hex')}\n`);

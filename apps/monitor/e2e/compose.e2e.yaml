@@ -1,0 +1,40 @@
+# Laid over compose.yaml for the end-to-end tests, run under a project of their own, so they never share a port, a
+# volume, a container or an image with a stack you are running.
+services:
+  postgres:
+    ports: !override
+      - 127.0.0.1::5432
+
+  monitor:
+    restart: 'no'
+    environment:
+      # Short times, so each scenario takes seconds.
+      MONITORING_INTERVAL_MS: '200'
+      MONITORING_DOWN_PROBE_THRESHOLD: '2'
+      MONITORING_HEALTH_ATTEMPT_TIMEOUT_MS: '500'
+      MONITORING_HEALTH_BUDGET_MS: '1500'
+      MONITORING_DIAGNOSTICS_ATTEMPT_TIMEOUT_MS: '500'
+      MONITORING_DIAGNOSTICS_BUDGET_MS: '1500'
+      MONITORING_RETRY_BASE_DELAY_MS: '50'
+      MONITORING_RETRY_MAX_DELAY_MS: '50'
+      DEVICE_E2E_TOKEN: e2e-secret
+      # Checksums from a binary, through the process adapter, as the vendor's will be made (R-16).
+      CHECKSUM_BINARY_PATH: /opt/vendor/checksum
+      CHECKSUM_BINARY_ALGORITHMS: sha256
+      CHECKSUM_BINARY_ARGS: '["{algorithm}"]'
+      CHECKSUM_BINARY_VERSION: e2e
+    # Only what is set here, whatever your own .env.devices and vendor/ hold.
+    env_file: !reset []
+    volumes: !override
+      - type: bind
+        source: ./apps/monitor/e2e/vendor
+        target: /opt/vendor
+        read_only: true
+    ports: !override
+      - 127.0.0.1::3000
+
+  simulator:
+    restart: 'no'
+    # The monitor reaches the devices inside the network. Only the control API is published.
+    ports: !override
+      - 127.0.0.1::4101
