@@ -404,6 +404,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-59 | Starting and stopping monitoring are actions: `POST /v1/monitoring/start` and `/stop`          | R-16             |
 | D-60 | On a signal, release what started in reverse order, each part even if another fails            | I-08             |
 | D-61 | Compose runs the whole stack. The image is Debian slim, as a vendor binary likely needs glibc  | R-14, R-18, R-19 |
+| D-62 | A simulator plays devices, each way it misbehaves a failure the monitor must tell apart        | R-17, I-02       |
 
 ## 4 Not doing (yet)
 
@@ -418,3 +419,4 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-55 | SSRF guard                 | Would block devices on private LANs    | As D-03                                       |
 | D-56 | A latest-statuses table    | An index serves a thousand devices     | Listing statuses measured too slow            |
 | D-57 | Keep the diagnostics bytes | Checked on arrival, nothing reads them | The binary arrives, or Q-06 is in doubt       |
+| D-63 | Simulator setting checks   | A wrong one only misplays a device     | Others drive it, not only its authors         |

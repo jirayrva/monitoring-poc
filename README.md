@@ -32,6 +32,41 @@ The first `--build` downloads the base images and npm packages, so run it once o
   the host's architecture, and runnable by the `node` user. The monitor stops at startup when it cannot run it. Every
   setting is in [DEVELOPMENT](docs/DEVELOPMENT.md#running-the-monitor).
 
+## Simulated devices
+
+The stack includes a simulator, so the monitor has devices to probe without real ones. Its devices answer on
+`127.0.0.1:4100`, each at `http://127.0.0.1:4100/devices/<deviceId>`, and its control API on `127.0.0.1:4101`. Inside
+Compose, the monitor reaches a device at `http://simulator:4100/devices/<deviceId>`.
+
+Add a device, register it with the monitor, then change how it answers while the monitor watches:
+
+```bash
+curl -X PUT http://127.0.0.1:4101/devices/sim-1 -H 'content-type: application/json' -d '{"deviceType":"switch"}'
+curl -X POST http://127.0.0.1:8080/v1/devices -H 'content-type: application/json' \
+  -d '{"deviceId":"sim-1","name":"Simulated switch","baseUrl":"http://simulator:4100/devices/sim-1","auth":{"strategy":"none"}}'
+curl -X PATCH http://127.0.0.1:4101/devices/sim-1 -H 'content-type: application/json' -d '{"health":"hangs"}'
+```
+
+`GET /devices` lists the simulated devices. `PUT /devices/<deviceId>` adds or replaces one from the defaults, `PATCH`
+changes some of its settings, and `DELETE` removes it. The settings, which the simulator takes as they come (D-63):
+
+| Setting                                          | Default  | What it does                                            |
+|--------------------------------------------------|----------|---------------------------------------------------------|
+| `health`, `diagnostics`                          | `normal` | How it answers that call. See below                     |
+| `status`                                         | `ok`     | Its word on its health. Any word, such as `maintenance` |
+| `token`                                          | none     | A bearer token every call must carry, or 401            |
+| `delayMs`                                        | `0`      | A wait before every answer                              |
+| `dropNext`                                       | `0`      | How many of its next calls drop the connection          |
+| `deviceType`                                     | `switch` | Its type                                                |
+| `hardware`, `softwareVersion`, `firmwareVersion` |          | What its diagnostics report                             |
+
+How it answers a call: `normal`, `garbage` (JSON the device API never sends), `html` (a page, as a captive portal
+sends), `fails` (500), `not_found` (404), `gateway_error` (502), `hangs`, `resets`, or `truncates` (cut off partway).
+Health can also be `impostor` (another device's ID), and diagnostics `tampered` (a checksum that does not match).
+
+The simulator keeps its devices in memory, so a restart forgets them. `SIMULATOR_DEVICE_PORT` and
+`SIMULATOR_CONTROL_PORT` move its ports.
+
 ## Documentation
 
 - [Decisions](docs/DECISIONS.md): what the brief asks for, what it leaves open, and what was decided

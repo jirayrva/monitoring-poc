@@ -23,3 +23,12 @@ WORKDIR /repo/apps/monitor
 USER node
 EXPOSE 3000
 CMD ["node", "src/main.ts"]
+
+# The simulator has no dependencies to install.
+FROM node:26.13.0-trixie-slim AS simulator
+ENV NODE_ENV=production HOST=0.0.0.0
+COPY apps/simulator /repo/apps/simulator
+WORKDIR /repo/apps/simulator
+USER node
+EXPOSE 4100 4101
+CMD ["node", "src/main.ts"]

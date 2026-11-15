@@ -1,5 +1,5 @@
-# The whole stack: `docker compose up`. For development, `pnpm deps:up` starts only what the service needs, and
-# `pnpm dev` runs the service itself.
+# The whole stack, with simulated devices: `docker compose up`. For development, `pnpm deps:up` starts only what the
+# service needs, and `pnpm dev` runs the service itself.
 
 # Names the containers, network and volume device-monitor-*, whatever the checkout's folder is called.
 name: device-monitor
@@ -70,6 +70,35 @@ services:
       timeout: 3s
       retries: 5
       start_period: 10s
+
+  simulator:
+    build:
+      context: .
+      target: simulator
+    init: true
+    restart: unless-stopped
+    environment:
+      SIMULATOR_DEVICE_PORT: ${SIMULATOR_DEVICE_PORT:-4100}
+      SIMULATOR_CONTROL_PORT: ${SIMULATOR_CONTROL_PORT:-4101}
+    ports:
+      # The same port inside and out: a device names the port it answers on, which must work from both.
+      - 127.0.0.1:${SIMULATOR_DEVICE_PORT:-4100}:${SIMULATOR_DEVICE_PORT:-4100}
+      # The control API, to add devices and change how they answer. Never given to the monitor.
+      - 127.0.0.1:${SIMULATOR_CONTROL_PORT:-4101}:${SIMULATOR_CONTROL_PORT:-4101}
+    networks:
+      - device-monitor
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:${SIMULATOR_CONTROL_PORT:-4101}/devices').then((r) => process.exit(r.ok ? 0 : 1), () => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
 volumes:
   postgres-data:

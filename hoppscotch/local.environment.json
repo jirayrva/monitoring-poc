@@ -8,6 +8,14 @@
     {
       "key": "deviceId",
       "value": "hoppscotch-switch"
+    },
+    {
+      "key": "simulator",
+      "value": "http://127.0.0.1:4101"
+    },
+    {
+      "key": "devices",
+      "value": "http://127.0.0.1:4100"
     }
   ]
 }

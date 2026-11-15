@@ -1,0 +1,14 @@
+{
+  "name": "@device-monitor/simulator",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/main.ts",
+    "start": "node src/main.ts"
+  },
+  "devDependencies": {
+    "@device-monitor/contracts": "workspace:*",
+    "ajv": "^8.20.0"
+  }
+}

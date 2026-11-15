@@ -150,6 +150,10 @@ it knows which answers show a misconfiguration.
 - An answer over 1 MiB is not read: `too_large`. A device that floods the monitor holds up no memory.
 - A TLS handshake that fails, such as on a certificate the monitor does not trust, is `tls_failed`.
 
+`apps/simulator` plays devices to this contract, for demos and tests (D-62). Each way a simulated device misbehaves
+gives one failure above: a wrong answer, an HTML page, a 500, a 404, a 502, no answer, a reset, an answer cut off,
+another device's ID, a token refused, or a checksum that does not match.
+
 ## Device states
 
 The state follows from the previous status and the probe outcome alone. What the device reports never changes it

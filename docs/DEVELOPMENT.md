@@ -104,7 +104,7 @@ To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of i
 
 One pnpm workspace (D-10):
 
-- `apps/`: what runs. `apps/monitor` is the service.
+- `apps/`: what runs. `apps/monitor` is the service, `apps/simulator` plays devices for demos and tests (D-62).
 - `packages/`: what the apps share. `packages/contracts` holds the APIs' JSON Schemas, each with valid and invalid
   samples that a test checks against it (D-45).
 - `tooling/`: scripts and checks for the repository itself.

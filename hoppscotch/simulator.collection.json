@@ -1,0 +1,164 @@
+{
+  "v": 4,
+  "name": "Device simulator",
+  "folders": [
+    {
+      "v": 4,
+      "name": "Simulator control API",
+      "folders": [],
+      "requests": [
+        {
+          "v": "8",
+          "name": "List simulated devices",
+          "method": "GET",
+          "endpoint": "<<simulator>>/devices",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
+          "name": "Add a simulated device",
+          "method": "PUT",
+          "endpoint": "<<simulator>>/devices/<<deviceId>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"deviceType\": \"switch\",\n  \"status\": \"ok\"\n}"
+          }
+        },
+        {
+          "v": "8",
+          "name": "Call the device's health",
+          "method": "GET",
+          "endpoint": "<<devices>>/devices/<<deviceId>>/v1/health",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
+          "name": "Call the device's diagnostics",
+          "method": "GET",
+          "endpoint": "<<devices>>/devices/<<deviceId>>/v1/diagnostics",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\npw.test(\"sends their checksum\", () => {\n  pw.expect(pw.response.headers.some((header) => header.key.toLowerCase() === \"diagnostics-checksum\")).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
+          "name": "Make the device fail its health call",
+          "method": "PATCH",
+          "endpoint": "<<simulator>>/devices/<<deviceId>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 200\", () => {\n  pw.expect(pw.response.status === 200).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": "application/json",
+            "body": "{\n  \"health\": \"fails\"\n}"
+          }
+        },
+        {
+          "v": "8",
+          "name": "Call the failing device's health",
+          "method": "GET",
+          "endpoint": "<<devices>>/devices/<<deviceId>>/v1/health",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 500\", () => {\n  pw.expect(pw.response.status === 500).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        },
+        {
+          "v": "8",
+          "name": "Remove the simulated device",
+          "method": "DELETE",
+          "endpoint": "<<simulator>>/devices/<<deviceId>>",
+          "params": [],
+          "headers": [],
+          "preRequestScript": "",
+          "testScript": "pw.test(\"answers 204\", () => {\n  pw.expect(pw.response.status === 204).toBe(true);\n});\n",
+          "auth": {
+            "authType": "inherit",
+            "authActive": true
+          },
+          "requestVariables": [],
+          "responses": {},
+          "body": {
+            "contentType": null,
+            "body": null
+          }
+        }
+      ],
+      "auth": {
+        "authType": "inherit",
+        "authActive": true
+      },
+      "headers": []
+    }
+  ],
+  "requests": [],
+  "auth": {
+    "authType": "none",
+    "authActive": true
+  },
+  "headers": []
+}
