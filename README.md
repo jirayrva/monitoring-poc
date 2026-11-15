@@ -10,8 +10,10 @@ It needs only [Docker](https://docs.docker.com/get-docker/).
 docker compose up --build
 ```
 
-This starts the monitor and its Postgres. The API is on <http://127.0.0.1:8080>, with its reference at
-[`/docs/`](http://127.0.0.1:8080/docs/). Set `MONITOR_PORT` to publish it on another port. Stop it with Ctrl-C, or
+This starts the monitor, its Postgres, a simulator of devices, and a gateway. The dashboard is on
+<http://127.0.0.1:8080>: every device's state, worst first, what its last probe found, its health and checksum, and a
+page to change how simulated devices answer. The monitor's API is at `/v1` on the same port, with its reference at
+[`/docs/`](http://127.0.0.1:8080/docs/). Set `GATEWAY_PORT` to publish them on another port. Stop it with Ctrl-C, or
 `docker compose down`. The data stays in a Docker volume until `docker compose down --volumes`.
 
 The first `--build` downloads the base images and npm packages, so run it once on a good connection. After that,

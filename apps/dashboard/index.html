@@ -1,0 +1,868 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Device monitor</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --text: #1d2330;
+        --muted: #667085;
+        --line: #e3e6eb;
+        --accent: #2563eb;
+        --up: #16a34a;
+        --suspect: #d97706;
+        --down: #dc2626;
+        --misconfigured: #7c3aed;
+        --unknown: #98a2b3;
+        font:
+          13px/1.45 system-ui,
+          -apple-system,
+          'Segoe UI',
+          sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #11141a;
+          --panel: #181c24;
+          --text: #e4e7ec;
+          --muted: #98a2b3;
+          --line: #2a303b;
+          --accent: #60a5fa;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        padding: 10px 20px;
+        background: var(--panel);
+        border-bottom: 1px solid var(--line);
+      }
+      header h1 {
+        font-size: 15px;
+        margin: 0 12px 0 0;
+      }
+      nav a {
+        color: var(--muted);
+        text-decoration: none;
+        margin-right: 12px;
+        padding: 4px 0;
+      }
+      nav a.current {
+        color: var(--text);
+        border-bottom: 2px solid var(--accent);
+      }
+      .counts {
+        display: flex;
+        gap: 12px;
+        margin-left: auto;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      main {
+        display: flex;
+        gap: 16px;
+        padding: 16px 20px;
+        align-items: flex-start;
+      }
+      section.list {
+        flex: 1;
+        min-width: 0;
+      }
+      aside {
+        width: 380px;
+        flex-shrink: 0;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 14px 16px;
+        position: relative;
+      }
+      aside h2 {
+        font-size: 15px;
+        margin: 0 0 2px;
+        padding-right: 28px;
+      }
+      aside button.close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        border: none;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1;
+        padding: 2px 6px;
+      }
+      aside h3 {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+        margin: 16px 0 6px;
+      }
+      dl {
+        display: grid;
+        grid-template-columns: max-content 1fr;
+        gap: 3px 12px;
+        margin: 0;
+      }
+      dt {
+        color: var(--muted);
+      }
+      dd {
+        margin: 0;
+        overflow-wrap: anywhere;
+      }
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      input,
+      select,
+      button {
+        font: inherit;
+        color: inherit;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 4px 8px;
+      }
+      button {
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: #fff;
+      }
+      button.danger {
+        color: var(--down);
+      }
+      button.chip[aria-pressed='true'] {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 6px 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+      }
+      th {
+        font-weight: 600;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      tbody tr {
+        cursor: pointer;
+      }
+      tbody tr:hover,
+      tbody tr.selected {
+        background: color-mix(in srgb, var(--accent) 8%, transparent);
+      }
+      td.state,
+      td.nowrap {
+        white-space: nowrap;
+      }
+      .state::before {
+        display: inline-block;
+        width: 1.2em;
+      }
+      .state-up::before {
+        content: '●';
+        color: var(--up);
+      }
+      .state-suspect::before {
+        content: '▲';
+        color: var(--suspect);
+      }
+      .state-down::before {
+        content: '■';
+        color: var(--down);
+      }
+      .state-misconfigured::before {
+        content: '◆';
+        color: var(--misconfigured);
+      }
+      .state-unknown::before {
+        content: '○';
+        color: var(--unknown);
+      }
+      .match {
+        color: var(--up);
+      }
+      .mismatch {
+        color: var(--down);
+        font-weight: 600;
+      }
+      .banner {
+        padding: 8px 20px;
+        background: color-mix(in srgb, var(--suspect) 15%, var(--panel));
+        border-bottom: 1px solid var(--line);
+      }
+      .banner.error {
+        background: color-mix(in srgb, var(--down) 15%, var(--panel));
+      }
+      form.stack {
+        display: grid;
+        gap: 8px;
+      }
+      form.stack label {
+        display: grid;
+        gap: 2px;
+        color: var(--muted);
+      }
+      .dim {
+        opacity: 0.5;
+      }
+      .sim td input {
+        width: 6em;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Device monitor</h1>
+      <nav>
+        <a href="#devices" id="nav-devices">Devices</a>
+        <a href="#simulator" id="nav-simulator">Simulator</a>
+        <a href="/docs/" target="_blank">API</a>
+      </nav>
+      <span id="monitoring"></span>
+      <span class="counts" id="counts"></span>
+    </header>
+    <div id="banners"></div>
+    <main>
+      <section class="list" id="devices-view">
+        <div class="toolbar">
+          <input type="search" id="search" placeholder="Search name or ID" aria-label="Search" />
+          <span id="filters"></span>
+          <button class="primary" id="add-device">Register a device</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>State</th>
+              <th>Device</th>
+              <th>Last probe found</th>
+              <th>Health</th>
+              <th>Checksum</th>
+              <th>Probed</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </section>
+      <aside id="panel" hidden></aside>
+      <section class="list" id="simulator-view" hidden></section>
+    </main>
+
+    <script type="module">
+      // The monitor's API is under /v1, and the simulator's control API under /control, both on this page's origin,
+      // through the gateway (D-66).
+      const pollMs = 2000;
+      const states = ['down', 'misconfigured', 'suspect', 'unknown', 'up'];
+      const stateLabels = {
+        up: 'Up',
+        suspect: 'Suspect',
+        down: 'Down',
+        misconfigured: 'Misconfigured',
+        unknown: 'Not probed yet',
+      };
+      const responseLabels = { none: 'No response', unexpected: 'Unexpected response', misconfigured: 'Misconfigured' };
+      const behaviours = [
+        'normal',
+        'garbage',
+        'html',
+        'fails',
+        'not_found',
+        'gateway_error',
+        'hangs',
+        'resets',
+        'truncates',
+      ];
+
+      const view = {
+        statuses: [],
+        monitoring: undefined,
+        /** The simulated devices, or undefined while the simulator does not answer. */
+        simulated: undefined,
+        selected: undefined,
+        registration: undefined,
+        filter: new Set(),
+        error: undefined,
+      };
+
+      /** An element with attributes and children. Text is always set as text, never parsed as HTML. */
+      const h = (tag, attributes = {}, ...children) => {
+        const element = document.createElement(tag);
+        for (const [name, value] of Object.entries(attributes)) {
+          if (name.startsWith('on')) {
+            element.addEventListener(name.slice(2), value);
+          } else if (value !== undefined && value !== false) {
+            element.setAttribute(name, value === true ? '' : value);
+          }
+        }
+        element.append(...children.flat().filter((child) => child !== undefined && child !== false));
+        return element;
+      };
+
+      /** Calls an API on this origin. Throws with the API's message when it answers an error. */
+      const call = async (method, path, body) => {
+        const response = await fetch(path, {
+          method,
+          headers: body === undefined ? {} : { 'content-type': 'application/json' },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        });
+        const text = await response.text();
+        const answer = text.startsWith('{') ? JSON.parse(text) : undefined;
+        if (!response.ok) {
+          throw Object.assign(new Error(answer?.message ?? answer?.error ?? `${response.status} ${text}`), {
+            status: response.status,
+          });
+        }
+        return answer;
+      };
+
+      const ago = (iso) => {
+        const seconds = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
+        return seconds < 60
+          ? `${seconds} s ago`
+          : seconds < 3600
+            ? `${Math.round(seconds / 60)} min ago`
+            : new Date(iso).toLocaleString();
+      };
+
+      const reasonText = ({ reason, httpStatus }) =>
+        ({
+          unreachable: 'unreachable',
+          timeout: 'timed out',
+          gateway_error: `gateway error, HTTP ${httpStatus}`,
+          cut_off: 'answer cut off',
+          unparsable: 'not JSON',
+          not_a_device_answer: 'not a device answer',
+          http_error: `HTTP ${httpStatus}`,
+          too_large: 'answer too large',
+          auth_failed: `credentials refused, HTTP ${httpStatus}`,
+          token_missing: 'token not set',
+          not_found: 'not found, HTTP 404',
+          wrong_device: 'another device answered',
+          tls_failed: 'TLS handshake failed',
+        })[reason] ?? reason;
+
+      /** What the last probe found, beside the state: whether anything responded, and why. */
+      const foundText = (status) => {
+        if (status.state === 'unknown') {
+          return '';
+        }
+        const probe = status.lastProbe;
+        if (probe.response === 'expected') {
+          return 'Expected response';
+        }
+        const inARow = status.state === 'suspect' ? `, ${status.failedProbes} in a row` : '';
+        return `${responseLabels[probe.response]}: ${reasonText(probe)}${inARow}`;
+      };
+
+      const healthText = (health) =>
+        health === undefined
+          ? ''
+          : health.state === 'unrecognized'
+            ? `${health.reported} (unrecognized)`
+            : health.state;
+
+      const checksumCell = (diagnostics) => {
+        if (diagnostics === undefined) {
+          return '';
+        }
+        if (diagnostics.state === 'unavailable') {
+          return h('span', { class: 'muted' }, `no diagnostics: ${reasonText(diagnostics)}`);
+        }
+        const { checksum } = diagnostics;
+        return checksum.comparison === 'unavailable'
+          ? h('span', { class: 'muted' }, `not checked: ${checksum.reason}`)
+          : h('span', { class: checksum.comparison }, checksum.comparison === 'match' ? '✓ match' : '✗ mismatch');
+      };
+
+      const rank = (status) => states.indexOf(status.state);
+
+      const shown = () => {
+        const search = document.querySelector('#search').value.trim().toLowerCase();
+        return view.statuses
+          .filter((status) => view.filter.size === 0 || view.filter.has(status.state))
+          .filter((status) => `${status.name} ${status.deviceId}`.toLowerCase().includes(search))
+          .toSorted((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+      };
+
+      const renderHeader = () => {
+        const count = (state) => view.statuses.filter((status) => status.state === state).length;
+        document
+          .querySelector('#counts')
+          .replaceChildren(
+            ...states.map((state) =>
+              h('span', { class: `state state-${state}`, title: stateLabels[state] }, String(count(state))),
+            ),
+          );
+        const monitoring = view.monitoring?.state;
+        document.querySelector('#monitoring').replaceChildren(
+          monitoring === undefined
+            ? ''
+            : h(
+                'span',
+                {},
+                h('span', { class: 'muted' }, 'Monitoring: '),
+                `${monitoring} `,
+                h(
+                  'button',
+                  {
+                    onclick: () =>
+                      act(() => call('POST', `/v1/monitoring/${monitoring === 'running' ? 'stop' : 'start'}`)),
+                  },
+                  monitoring === 'running' ? 'Stop' : 'Start',
+                ),
+              ),
+        );
+      };
+
+      const renderBanners = () => {
+        const standIn = view.statuses.some((status) => status.diagnostics?.checksum?.generator?.standIn);
+        document
+          .querySelector('#banners')
+          .replaceChildren(
+            view.error ? h('div', { class: 'banner error' }, view.error) : '',
+            standIn
+              ? h('div', { class: 'banner' }, 'Checksums come from a stand-in, until the vendor’s binary is set up.')
+              : '',
+          );
+      };
+
+      const renderFilters = () => {
+        document.querySelector('#filters').replaceChildren(
+          ...states.map((state) =>
+            h(
+              'button',
+              {
+                class: `chip state state-${state}`,
+                'aria-pressed': String(view.filter.has(state)),
+                onclick: () => {
+                  view.filter.has(state) ? view.filter.delete(state) : view.filter.add(state);
+                  render();
+                },
+              },
+              stateLabels[state],
+            ),
+          ),
+        );
+      };
+
+      const renderRows = () => {
+        const rows = shown().map((status) => {
+          const reported = status.state === 'up' ? status : status.lastKnown;
+          return h(
+            'tr',
+            {
+              class: status.deviceId === view.selected ? 'selected' : undefined,
+              onclick: () => select(status.deviceId),
+            },
+            h('td', { class: `state state-${status.state}` }, stateLabels[status.state]),
+            h('td', {}, status.name, h('div', { class: 'muted' }, status.deviceId)),
+            h('td', {}, foundText(status)),
+            h('td', { class: status.state === 'up' ? undefined : 'muted' }, healthText(reported?.health)),
+            h('td', {}, status.state === 'up' ? checksumCell(status.diagnostics) : ''),
+            h('td', { class: 'muted nowrap' }, status.state === 'unknown' ? '' : ago(status.lastProbe.probedAt)),
+          );
+        });
+        document
+          .querySelector('#rows')
+          .replaceChildren(
+            ...(rows.length > 0 ? rows : [h('tr', {}, h('td', { colspan: '6', class: 'muted' }, 'No devices.'))]),
+          );
+      };
+
+      const pairs = (entries) =>
+        h(
+          'dl',
+          {},
+          entries
+            .filter(([, value]) => value !== undefined && value !== '')
+            .flatMap(([name, value]) => [h('dt', {}, name), h('dd', {}, value)]),
+        );
+
+      /** What a device reported: health, capabilities and diagnostics. */
+      const reportedSections = ({ health, capabilities, diagnostics }) => [
+        pairs([
+          ['Health', healthText(health)],
+          ['Type', capabilities.deviceType],
+          ['Protocols', capabilities.protocols.map((p) => `${p.name} ${p.version} on ${p.port}`).join(', ') || 'none'],
+          ['Algorithm', capabilities.checksumAlgorithm],
+        ]),
+        h('h3', {}, 'Diagnostics'),
+        diagnostics.state === 'unavailable'
+          ? pairs([
+              ['Not read', reasonText(diagnostics)],
+              ['Protocol', diagnostics.protocol],
+            ])
+          : pairs([
+              ['Protocol', diagnostics.protocol],
+              [
+                'Hardware',
+                `${diagnostics.hardware.model} ${diagnostics.hardware.revision}, ${diagnostics.hardware.serial}`,
+              ],
+              ['Software', diagnostics.softwareVersion],
+              ['Firmware', diagnostics.firmwareVersion],
+              ['Says', diagnostics.reportedStatus],
+              ['Checksum', checksumCell(diagnostics)],
+              ['Reported', diagnostics.checksum.reported],
+              ['Computed', diagnostics.checksum.computed],
+              [
+                'By',
+                `${diagnostics.checksum.generator.name} ${diagnostics.checksum.generator.version}${diagnostics.checksum.generator.standIn ? ', a stand-in' : ''}`,
+              ],
+            ]),
+      ];
+
+      const closeButton = () =>
+        h(
+          'button',
+          {
+            class: 'close',
+            title: 'Close',
+            'aria-label': 'Close',
+            onclick: () => {
+              view.selected = undefined;
+              render();
+            },
+          },
+          '×',
+        );
+
+      const renderDevicePanel = (status) => {
+        const { registration } = view;
+        return [
+          closeButton(),
+          h('h2', {}, status.name),
+          h('div', { class: 'muted' }, status.deviceId),
+          h('h3', {}, 'Status'),
+          pairs([
+            ['State', h('span', { class: `state state-${status.state}` }, stateLabels[status.state])],
+            ['Since', new Date(status.since).toLocaleString()],
+            ['Found', foundText(status)],
+            [
+              'Probed',
+              status.state === 'unknown'
+                ? undefined
+                : `${ago(status.lastProbe.probedAt)}, in ${status.lastProbe.durationMs} ms`,
+            ],
+          ]),
+          status.state === 'up' ? [h('h3', {}, 'Reported'), reportedSections(status)] : '',
+          status.lastKnown
+            ? [
+                h('h3', {}, `Last known, ${ago(status.lastKnown.seenAt)}: may be out of date`),
+                reportedSections(status.lastKnown),
+              ]
+            : '',
+          h('h3', {}, 'Registration'),
+          registration?.deviceId === status.deviceId
+            ? pairs([
+                ['Base URL', registration.baseUrl],
+                ['Auth', registration.auth.strategy === 'bearer' ? `bearer, ${registration.auth.secretRef}` : 'none'],
+              ])
+            : h('div', { class: 'muted' }, 'Loading…'),
+          h('p', {}, h('button', { class: 'danger', onclick: () => unregister(status) }, 'Unregister')),
+        ];
+      };
+
+      const renderRegisterForm = () => {
+        const submit = (event) => {
+          event.preventDefault();
+          const form = new FormData(event.target);
+          const secretRef = form.get('secretRef').trim();
+          const deviceId = form.get('deviceId').trim();
+          void act(async () => {
+            await call('POST', '/v1/devices', {
+              deviceId,
+              name: form.get('name').trim(),
+              baseUrl: form.get('baseUrl').trim(),
+              auth: secretRef === '' ? { strategy: 'none' } : { strategy: 'bearer', secretRef },
+            });
+            view.selected = deviceId;
+          });
+        };
+        return [
+          closeButton(),
+          h('h2', {}, 'Register a device'),
+          h(
+            'form',
+            { class: 'stack', onsubmit: submit },
+            h('label', {}, 'Device ID', h('input', { name: 'deviceId', required: true })),
+            h('label', {}, 'Name', h('input', { name: 'name', required: true })),
+            h(
+              'label',
+              {},
+              'Base URL',
+              h('input', {
+                name: 'baseUrl',
+                type: 'url',
+                required: true,
+                placeholder: 'http://simulator:4100/devices/my-switch',
+              }),
+            ),
+            h(
+              'label',
+              {},
+              'Token setting, for bearer auth',
+              h('input', { name: 'secretRef', placeholder: 'DEVICE_MY_TOKEN' }),
+            ),
+            h('button', { class: 'primary' }, 'Register'),
+          ),
+        ];
+      };
+
+      const renderPanel = () => {
+        const panel = document.querySelector('#panel');
+        const status = view.statuses.find((each) => each.deviceId === view.selected);
+        panel.hidden = view.selected === undefined || (view.selected !== 'new' && status === undefined);
+        if (view.selected === 'new') {
+          if (!panel.contains(document.activeElement)) {
+            panel.replaceChildren(...renderRegisterForm());
+          }
+        } else if (status) {
+          panel.replaceChildren(...renderDevicePanel(status).flat(2));
+        }
+      };
+
+      const simulatedRow = (device) => {
+        const change =
+          (setting, parse = (value) => value) =>
+          (event) =>
+            act(() =>
+              call('PATCH', `/control/devices/${encodeURIComponent(device.deviceId)}`, {
+                [setting]: parse(event.target.value),
+              }),
+            );
+        const choose = (setting, options) =>
+          h(
+            'select',
+            { onchange: change(setting) },
+            options.map((option) => h('option', { selected: option === device[setting] }, option)),
+          );
+        return h(
+          'tr',
+          {},
+          h('td', {}, device.deviceId),
+          h('td', {}, choose('health', [...behaviours, 'impostor'])),
+          h(
+            'td',
+            // The monitor reads diagnostics only after a health answer it can use (D-34).
+            {
+              class: device.health === 'normal' ? undefined : 'dim',
+              title: device.health === 'normal' ? undefined : 'Not called while health is not normal',
+            },
+            choose('diagnostics', [...behaviours, 'tampered']),
+          ),
+          h('td', {}, h('input', { value: device.status, onchange: change('status') })),
+          h(
+            'td',
+            {},
+            h('input', {
+              type: 'number',
+              min: '0',
+              step: '100',
+              value: String(device.delayMs),
+              onchange: change('delayMs', Number),
+            }),
+          ),
+          h(
+            'td',
+            {},
+            h('input', {
+              type: 'number',
+              min: '0',
+              value: String(device.dropNext),
+              onchange: change('dropNext', Number),
+            }),
+          ),
+          h(
+            'td',
+            {},
+            h(
+              'button',
+              {
+                class: 'danger',
+                onclick: () => act(() => call('DELETE', `/control/devices/${encodeURIComponent(device.deviceId)}`)),
+              },
+              'Remove',
+            ),
+          ),
+        );
+      };
+
+      const renderSimulator = () => {
+        const section = document.querySelector('#simulator-view');
+        if (section.contains(document.activeElement)) {
+          return;
+        }
+        if (view.simulated === undefined) {
+          section.replaceChildren(
+            h('p', { class: 'muted' }, 'The simulator does not answer. It runs only in the stack: docker compose up.'),
+          );
+          return;
+        }
+        const add = (event) => {
+          event.preventDefault();
+          const form = new FormData(event.target);
+          const deviceId = form.get('deviceId').trim();
+          void act(async () => {
+            await call('PUT', `/control/devices/${encodeURIComponent(deviceId)}`, {
+              deviceType: form.get('deviceType'),
+            });
+            await call('POST', '/v1/devices', {
+              deviceId,
+              name: `Simulated ${form.get('deviceType')} ${deviceId}`,
+              baseUrl: `${form.get('deviceBaseUrl').trim()}/${encodeURIComponent(deviceId)}`,
+              auth: { strategy: 'none' },
+            });
+          });
+        };
+        section.replaceChildren(
+          h(
+            'form',
+            { class: 'toolbar', onsubmit: add },
+            h('input', { name: 'deviceId', required: true, placeholder: 'Device ID', 'aria-label': 'Device ID' }),
+            h(
+              'select',
+              { name: 'deviceType', 'aria-label': 'Device type' },
+              ['switch', 'camera', 'access-point', 'display'].map((type) => h('option', {}, type)),
+            ),
+            h('input', {
+              name: 'deviceBaseUrl',
+              value: 'http://simulator:4100/devices',
+              size: '30',
+              'aria-label': 'Where the monitor reaches the simulator',
+            }),
+            h('button', { class: 'primary' }, 'Add and register'),
+          ),
+          h(
+            'table',
+            { class: 'sim' },
+            h(
+              'thead',
+              {},
+              h(
+                'tr',
+                {},
+                ['Device', 'Health call', 'Diagnostics call', 'Says', 'Delay, ms', 'Drop next', ''].map((name) =>
+                  h('th', {}, name),
+                ),
+              ),
+            ),
+            h('tbody', {}, view.simulated.toSorted((a, b) => a.deviceId.localeCompare(b.deviceId)).map(simulatedRow)),
+          ),
+        );
+      };
+
+      const render = () => {
+        const page = location.hash === '#simulator' ? 'simulator' : 'devices';
+        document.querySelector('#nav-devices').classList.toggle('current', page === 'devices');
+        document.querySelector('#nav-simulator').classList.toggle('current', page === 'simulator');
+        document.querySelector('#devices-view').hidden = page !== 'devices';
+        document.querySelector('#simulator-view').hidden = page !== 'simulator';
+        renderHeader();
+        renderBanners();
+        if (page === 'devices') {
+          renderFilters();
+          renderRows();
+          renderPanel();
+        } else {
+          document.querySelector('#panel').hidden = true;
+          renderSimulator();
+        }
+      };
+
+      const refresh = async () => {
+        try {
+          const [statuses, monitoring] = await Promise.all([
+            call('GET', '/v1/device-statuses'),
+            call('GET', '/v1/monitoring'),
+          ]);
+          view.statuses = statuses.data;
+          view.monitoring = monitoring;
+          view.error = undefined;
+        } catch (error) {
+          view.error = `The monitor does not answer: ${error.message}`;
+        }
+        if (location.hash === '#simulator') {
+          view.simulated = await call('GET', '/control/devices').then(
+            (answer) => answer.data,
+            () => undefined,
+          );
+        }
+        render();
+      };
+
+      /** Runs a change, then shows its outcome at once rather than at the next poll. */
+      const act = async (change) => {
+        try {
+          await change();
+        } catch (error) {
+          view.error = error.message;
+          render();
+          return;
+        }
+        document.activeElement?.blur();
+        await refresh();
+      };
+
+      const select = (deviceId) => {
+        view.selected = deviceId;
+        render();
+        if (deviceId !== 'new') {
+          void call('GET', `/v1/devices/${encodeURIComponent(deviceId)}`).then((registration) => {
+            view.registration = registration;
+            render();
+          });
+        }
+      };
+
+      const unregister = (status) => {
+        if (confirm(`Unregister ${status.name}? Its history stays.`)) {
+          view.selected = undefined;
+          void act(() => call('DELETE', `/v1/devices/${encodeURIComponent(status.deviceId)}`));
+        }
+      };
+
+      document.querySelector('#search').addEventListener('input', render);
+      document.querySelector('#add-device').addEventListener('click', () => select('new'));
+      addEventListener('hashchange', () => void refresh());
+      // Polls only while the page is visible.
+      setInterval(() => document.hidden || void refresh(), pollMs);
+      document.addEventListener('visibilitychange', () => document.hidden || void refresh());
+      void refresh();
+    </script>
+  </body>
+</html>

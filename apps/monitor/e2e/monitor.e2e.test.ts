@@ -302,6 +302,39 @@ describe('the monitor, run as docker compose up runs it', () => {
     });
   });
 
+  describe('is reached through its gateway', () => {
+    it('serves the dashboard', async () => {
+      // Act
+      const response = await fetch(`${stack.gatewayUrl}/`);
+
+      // Assert
+      assert.equal(response.status, 200);
+      assert.match(await response.text(), /<title>Device monitor<\/title>/);
+    });
+
+    it("sends the monitor's API and its reference to the monitor, at the same paths", async () => {
+      // Act
+      const statuses = await fetch(`${stack.gatewayUrl}/v1/device-statuses`);
+      const reference = await fetch(`${stack.gatewayUrl}/docs/`);
+
+      // Assert
+      assert.equal(statuses.status, 200);
+      assert.ok(
+        (await jsonOf<{ data: StatusJson[] }>(statuses)).data.some(({ deviceId }) => deviceId === 'demo-lobby-switch'),
+      );
+      assert.equal(reference.status, 200);
+    });
+
+    it("sends the simulator's control API to the simulator, under /control", async () => {
+      // Act
+      const response = await fetch(`${stack.gatewayUrl}/control/devices`);
+
+      // Assert
+      assert.equal(response.status, 200);
+      assert.ok((await jsonOf<{ data: { deviceId: string }[] }>(response)).data.length > 0);
+    });
+  });
+
   describe('starts and stops cleanly', () => {
     it('refuses to start with wrong settings, listing every problem', async () => {
       // Act

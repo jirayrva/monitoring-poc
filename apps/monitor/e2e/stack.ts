@@ -50,6 +50,7 @@ const startStack = async () => {
     return {
       monitorUrl: await urlOf('monitor', 3000),
       controlUrl: await urlOf('simulator', 4101),
+      gatewayUrl: await urlOf('gateway', 8080),
       /** Where the monitor's container reaches a simulated device. */
       deviceUrl: (deviceId: string) => `http://simulator:4100/devices/${deviceId}`,
       /** Restarts a service and waits until it is healthy again. It may be published on another port then. */

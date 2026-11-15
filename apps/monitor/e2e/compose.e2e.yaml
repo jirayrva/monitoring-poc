@@ -38,3 +38,8 @@ services:
     # The monitor reaches the devices inside the network. Only the control API is published.
     ports: !override
       - 127.0.0.1::4101
+
+  gateway:
+    restart: 'no'
+    ports: !override
+      - 127.0.0.1::8080

@@ -407,6 +407,8 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-62 | A simulator plays devices, each way it misbehaves a failure the monitor must tell apart        | R-17, I-02       |
 | D-64 | The simulator registers its demo devices with the monitor as it starts: no one-shot seed       | R-19, I-02       |
 | D-65 | End-to-end tests run the whole stack in Compose, under a project of their own                  | R-16, R-17       |
+| D-66 | A Caddy gateway serves the dashboard and both APIs on one origin: no CORS, one port            | R-19, R-20       |
+| D-67 | The dashboard is one HTML file, with no build and no framework, polling every 2 s              | R-20, I-09       |
 
 ## 4 Not doing (yet)
 

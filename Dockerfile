@@ -32,3 +32,9 @@ WORKDIR /repo/apps/simulator
 USER node
 EXPOSE 4100 4101
 CMD ["node", "src/main.ts"]
+
+# The stack's one way in: serves the dashboard, a single HTML file, and sends the APIs on (D-66).
+FROM caddy:2.11.9 AS gateway
+COPY apps/gateway/Caddyfile /etc/caddy/Caddyfile
+COPY apps/dashboard/index.html /srv/index.html
+EXPOSE 8080

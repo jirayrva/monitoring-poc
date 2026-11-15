@@ -1,5 +1,5 @@
-# The whole stack, with simulated devices: `docker compose up`. For development, `pnpm deps:up` starts only what the
-# service needs, and `pnpm dev` runs the service itself.
+# The whole stack, with simulated devices: `docker compose up`, then the dashboard on http://127.0.0.1:8080. For
+# development, `pnpm deps:up` starts only what the service needs, and `pnpm dev` runs the service itself.
 
 # Names the containers, network and volume device-monitor-*, whatever the checkout's folder is called.
 name: device-monitor
@@ -53,9 +53,7 @@ services:
         source: ./vendor
         target: /opt/vendor
         read_only: true
-    ports:
-      # 8080, so it does not clash with `pnpm dev` on 3000.
-      - 127.0.0.1:${MONITOR_PORT:-8080}:3000
+    # Reached through the gateway, not published.
     networks:
       - device-monitor
     depends_on:
@@ -111,6 +109,29 @@ services:
     depends_on:
       monitor:
         condition: service_healthy
+
+  # The dashboard, the monitor's API and the simulator's control API, on one origin and one port (D-66).
+  gateway:
+    build:
+      context: .
+      target: gateway
+    restart: unless-stopped
+    environment:
+      SIMULATOR_CONTROL_PORT: ${SIMULATOR_CONTROL_PORT:-4101}
+    ports:
+      # 8080, so it does not clash with `pnpm dev` on 3000.
+      - 127.0.0.1:${GATEWAY_PORT:-8080}:8080
+    networks:
+      - device-monitor
+    depends_on:
+      monitor:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--quiet', '--spider', 'http://127.0.0.1:8080/livez']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
 
 volumes:
   postgres-data:

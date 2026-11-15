@@ -1,0 +1,27 @@
+# The stack's one way in: the dashboard, with the monitor's API and the simulator's control API on the same origin, so
+# the browser needs no CORS and a demo needs one port (D-66).
+{
+	admin off
+	auto_https off
+}
+
+:8080 {
+	encode zstd gzip
+
+	# The monitor's routes, at the paths it serves them on: its API, its liveness and its API reference.
+	@monitor path /v1/* /livez /docs /docs/*
+	handle @monitor {
+		reverse_proxy monitor:3000
+	}
+
+	# The simulator's control API, without the prefix. A stack without the simulator answers 502, which the dashboard
+	# explains.
+	handle_path /control/* {
+		reverse_proxy simulator:{$SIMULATOR_CONTROL_PORT:4101}
+	}
+
+	handle {
+		root * /srv
+		file_server
+	}
+}

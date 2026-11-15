@@ -113,7 +113,8 @@ Driven ports, typed in `core/ports/driven/` with the domain model (D-25).
 
 The `api-http` adapter serves the driving ports over HTTP, with Fastify (D-46). The request and response schemas live
 in `packages/contracts/monitor-api`, which clients can use too (D-45). The OpenAPI document is generated from the
-routes, and served with an API reference at `/docs/` (D-50).
+routes, and served with an API reference at `/docs/` (D-50). In the stack, a gateway serves the API and its
+reference at the same paths, on the dashboard's origin (D-66).
 
 - Every API path starts with its major version, `/v1`, so a change that breaks clients can come as `/v2` beside it
   (D-47). `/docs` and `/livez` have none: one is for people, the other for the container's healthcheck. `/livez`

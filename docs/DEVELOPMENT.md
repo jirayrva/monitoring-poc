@@ -107,7 +107,9 @@ To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of i
 
 One pnpm workspace (D-10):
 
-- `apps/`: what runs. `apps/monitor` is the service, `apps/simulator` plays devices for demos and tests (D-62).
+- `apps/`: what runs. `apps/monitor` is the service, `apps/simulator` plays devices for demos and tests (D-62),
+  `apps/dashboard` is the dashboard, one HTML file (D-67), and `apps/gateway` the Caddy config that serves it with
+  both APIs (D-66).
 - `packages/`: what the apps share. `packages/contracts` holds the APIs' JSON Schemas, each with valid and invalid
   samples that a test checks against it (D-45).
 - `tooling/`: scripts and checks for the repository itself.
