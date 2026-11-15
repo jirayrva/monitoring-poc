@@ -69,7 +69,7 @@ a setting for one without it. When a step's attempts and waits do not fit its bu
 It exits 0, or 1 when something failed to start or stop, when stopping took longer than `SHUTDOWN_TIMEOUT_MS`, or on
 a second signal while stopping.
 
-`docker compose up` runs it in a container instead, as the [README](../README.md#running-it) says, on the same
+`docker compose up` runs it in a container instead, as the [README](../README.md#run-it) says, on the same
 Postgres. Stop that one (`docker compose stop monitor`) before `pnpm dev`, or both probe the same devices.
 
 To call it by hand, [hoppscotch/](../hoppscotch/README.md) has a collection of its API (D-49).
