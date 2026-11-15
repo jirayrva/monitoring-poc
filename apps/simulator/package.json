@@ -5,7 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/main.ts",
-    "start": "node src/main.ts"
+    "start": "node src/main.ts",
+    "fleet:add": "node src/fleet.ts add",
+    "fleet:remove": "node src/fleet.ts remove"
+  },
+  "dependencies": {
+    "p-map": "^7.1.1"
   },
   "devDependencies": {
     "@device-monitor/contracts": "workspace:*",

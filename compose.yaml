@@ -38,6 +38,8 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       # The demo camera's token. It opens nothing real.
       DEVICE_DEMO_TOKEN: demo-token
+      # From the shell, to see how rounds of the fleet shorten as it rises.
+      MONITORING_MAX_CONCURRENT_PROBES: ${MONITORING_MAX_CONCURRENT_PROBES:-250}
     env_file:
       # Device tokens, as DEVICE_<NAME>=<token> lines, kept out of this file.
       - path: .env.devices

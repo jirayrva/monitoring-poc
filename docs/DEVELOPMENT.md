@@ -40,6 +40,8 @@ first, as in `test:unit`, so related ones sort together.
 | `pnpm test`               | Runs all tests                                                                     |
 | `pnpm test:unit`          | Runs `*.unit.test.ts`, which need nothing running                                  |
 | `pnpm test:integration`   | Runs `*.integration.test.ts`, which need the services they talk to                 |
+| `pnpm fleet:add [size]`   | Adds a fleet of simulated devices, 1001 unless given, to the running stack         |
+| `pnpm fleet:remove`       | Removes the fleet from the running stack                                           |
 | `pnpm deps:up`            | Starts only Postgres, in Compose, and waits until it is ready                      |
 | `pnpm clean:compose`      | Stops Compose and deletes its volumes, so Postgres starts empty next time          |
 | `pnpm clean:dependencies` | Removes every `node_modules` folder                                                |

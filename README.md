@@ -75,6 +75,20 @@ The simulator keeps changes in memory, so a restart brings back the devices in t
 @device-monitor/simulator dev`), it starts empty, unless `SIMULATOR_DEVICES_FILE` names a file, and registers them only
 with the monitor `SIMULATOR_MONITOR_URL` names, at `SIMULATOR_DEVICE_BASE_URL`.
 
+### A fleet, to see it at scale
+
+```bash
+pnpm install
+pnpm fleet:add
+```
+
+This adds 1001 devices to the running stack, each to the simulator, then to the monitor, or as many as given, up to
+10000 (`pnpm fleet:add 5000`). Most work, and a few in every hundred are slow, degraded, failing or never answer, the
+same every time. Each round's `probed` and `durationMs` are in the monitor's log
+(`docker compose logs -f monitor`). Start the stack with a higher `MONITORING_MAX_CONCURRENT_PROBES` to see rounds
+shorten. `pnpm fleet:remove` removes every `fleet-*` device from both, and leaves the others. Adding again after the
+simulator restarted brings the fleet back.
+
 ## Documentation
 
 - [Decisions](docs/DECISIONS.md): what the brief asks for, what it leaves open, and what was decided
