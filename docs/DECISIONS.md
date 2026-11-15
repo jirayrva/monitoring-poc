@@ -405,6 +405,7 @@ Details, where there are any, are in [DEVELOPMENT.md](./DEVELOPMENT.md).
 | D-60 | On a signal, release what started in reverse order, each part even if another fails            | I-08             |
 | D-61 | Compose runs the whole stack. The image is Debian slim, as a vendor binary likely needs glibc  | R-14, R-18, R-19 |
 | D-62 | A simulator plays devices, each way it misbehaves a failure the monitor must tell apart        | R-17, I-02       |
+| D-64 | The simulator registers its demo devices with the monitor as it starts: no one-shot seed       | R-19, I-02       |
 
 ## 4 Not doing (yet)
 

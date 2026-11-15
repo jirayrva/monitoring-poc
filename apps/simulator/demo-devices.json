@@ -1,0 +1,46 @@
+{
+  "devices": [
+    { "deviceId": "demo-lobby-switch", "name": "Lobby switch", "simulated": {} },
+    {
+      "deviceId": "demo-door-camera",
+      "name": "Front door camera",
+      "secretRef": "DEVICE_DEMO_TOKEN",
+      "simulated": { "deviceType": "camera", "token": "demo-token" }
+    },
+    {
+      "deviceId": "demo-warehouse-switch",
+      "name": "Warehouse switch (updating)",
+      "simulated": { "status": "updating", "firmwareVersion": "1.1.0-rc.2" }
+    },
+    {
+      "deviceId": "demo-roof-ap",
+      "name": "Roof access point (slow, degraded)",
+      "simulated": { "deviceType": "access-point", "status": "degraded", "delayMs": 400 }
+    },
+    {
+      "deviceId": "demo-kiosk-display",
+      "name": "Kiosk display (unknown status)",
+      "simulated": { "deviceType": "display", "status": "maintenance" }
+    },
+    {
+      "deviceId": "demo-office-gateway",
+      "name": "Office gateway (tampered diagnostics)",
+      "simulated": { "deviceType": "gateway", "diagnostics": "tampered" }
+    },
+    {
+      "deviceId": "demo-basement-switch",
+      "name": "Basement switch (not answering)",
+      "simulated": { "health": "hangs" }
+    },
+    {
+      "deviceId": "demo-parking-camera",
+      "name": "Parking camera (wrong address)",
+      "simulated": { "deviceType": "camera", "health": "impostor" }
+    },
+    {
+      "deviceId": "demo-storage-switch",
+      "name": "Storage switch (wrong path)",
+      "simulated": { "health": "not_found" }
+    }
+  ]
+}

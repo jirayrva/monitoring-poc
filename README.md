@@ -34,7 +34,13 @@ The first `--build` downloads the base images and npm packages, so run it once o
 
 ## Simulated devices
 
-The stack includes a simulator, so the monitor has devices to probe without real ones. Its devices answer on
+The stack includes a simulator, so the monitor has devices to probe without real ones. It starts with the nine devices
+in [`apps/simulator/demo-devices.json`](apps/simulator/demo-devices.json), one per thing worth showing: working, with a
+token, updating, slow and degraded, an unknown status, tampered diagnostics, not answering, another device at its
+address, and a wrong path. It registers them with the monitor as it starts, and leaves one already registered as it
+is, so a restart does not undo a change made through the monitor's API.
+
+Its devices answer on
 `127.0.0.1:4100`, each at `http://127.0.0.1:4100/devices/<deviceId>`, and its control API on `127.0.0.1:4101`. Inside
 Compose, the monitor reaches a device at `http://simulator:4100/devices/<deviceId>`.
 
@@ -64,8 +70,10 @@ How it answers a call: `normal`, `garbage` (JSON the device API never sends), `h
 sends), `fails` (500), `not_found` (404), `gateway_error` (502), `hangs`, `resets`, or `truncates` (cut off partway).
 Health can also be `impostor` (another device's ID), and diagnostics `tampered` (a checksum that does not match).
 
-The simulator keeps its devices in memory, so a restart forgets them. `SIMULATOR_DEVICE_PORT` and
-`SIMULATOR_CONTROL_PORT` move its ports.
+The simulator keeps changes in memory, so a restart brings back the devices in the file as they are there.
+`SIMULATOR_DEVICE_PORT` and `SIMULATOR_CONTROL_PORT` move its ports. Run on its own (`pnpm --filter
+@device-monitor/simulator dev`), it starts empty, unless `SIMULATOR_DEVICES_FILE` names a file, and registers them only
+with the monitor `SIMULATOR_MONITOR_URL` names, at `SIMULATOR_DEVICE_BASE_URL`.
 
 ## Documentation
 

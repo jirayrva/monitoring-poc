@@ -36,6 +36,8 @@ services:
     environment:
       DATASTORE_CONNECTION_STRING: postgres://monitor:monitor@postgres:5432/monitor
       LOG_LEVEL: ${LOG_LEVEL:-info}
+      # The demo camera's token. It opens nothing real.
+      DEVICE_DEMO_TOKEN: demo-token
     env_file:
       # Device tokens, as DEVICE_<NAME>=<token> lines, kept out of this file.
       - path: .env.devices
@@ -80,6 +82,11 @@ services:
     environment:
       SIMULATOR_DEVICE_PORT: ${SIMULATOR_DEVICE_PORT:-4100}
       SIMULATOR_CONTROL_PORT: ${SIMULATOR_CONTROL_PORT:-4101}
+      # Starts with the demo devices, and registers them with the monitor. One already registered is left as it is,
+      # so a restart does not undo changes made through the monitor's API.
+      SIMULATOR_DEVICES_FILE: demo-devices.json
+      SIMULATOR_MONITOR_URL: http://monitor:3000
+      SIMULATOR_DEVICE_BASE_URL: http://simulator:${SIMULATOR_DEVICE_PORT:-4100}/devices
     ports:
       # The same port inside and out: a device names the port it answers on, which must work from both.
       - 127.0.0.1:${SIMULATOR_DEVICE_PORT:-4100}:${SIMULATOR_DEVICE_PORT:-4100}
@@ -99,6 +106,9 @@ services:
       timeout: 3s
       retries: 5
       start_period: 5s
+    depends_on:
+      monitor:
+        condition: service_healthy
 
 volumes:
   postgres-data:
