@@ -671,10 +671,18 @@
             { onchange: change(setting) },
             options.map((option) => h('option', { selected: option === device[setting] }, option)),
           );
+        const protocols = h(
+          'select',
+          { onchange: change('protocols', (value) => value.split(', ')) },
+          ['rest', 'grpc', 'grpc, rest', 'rest, grpc'].map((option) =>
+            h('option', { selected: option === device.protocols.join(', ') }, option),
+          ),
+        );
         return h(
           'tr',
           {},
           h('td', {}, device.deviceId),
+          h('td', {}, protocols),
           h('td', {}, choose('health', [...behaviours, 'impostor'])),
           h(
             'td',
@@ -776,8 +784,8 @@
               h(
                 'tr',
                 {},
-                ['Device', 'Health call', 'Diagnostics call', 'Says', 'Delay, ms', 'Drop next', ''].map((name) =>
-                  h('th', {}, name),
+                ['Device', 'Protocols', 'Health call', 'Diagnostics call', 'Says', 'Delay, ms', 'Drop next', ''].map(
+                  (name) => h('th', {}, name),
                 ),
               ),
             ),

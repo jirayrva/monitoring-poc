@@ -44,7 +44,8 @@ const fleetOf = (size: number): DevicesFileEntry[] => {
       deviceId: `${fleetPrefix}${number}`,
       name: `Fleet ${deviceType} ${number}`,
       secretRef: undefined,
-      simulated: { deviceType, ...behaviourOf(n) },
+      // Some prefer gRPC, so both protocols are read at scale.
+      simulated: { deviceType, ...(n % 7 === 0 ? { protocols: ['grpc', 'rest'] } : {}), ...behaviourOf(n) },
     };
   });
 };

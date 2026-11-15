@@ -69,13 +69,19 @@ importers:
 
   apps/simulator:
     dependencies:
+      '@device-monitor/contracts':
+        specifier: workspace:*
+        version: link:../../packages/contracts
+      '@grpc/grpc-js':
+        specifier: ^1.14.7
+        version: 1.14.7
+      '@grpc/proto-loader':
+        specifier: ^0.8.1
+        version: 0.8.1
       p-map:
         specifier: ^7.1.1
         version: 7.1.1
     devDependencies:
-      '@device-monitor/contracts':
-        specifier: workspace:*
-        version: link:../../packages/contracts
       ajv:
         specifier: ^8.20.0
         version: 8.20.0

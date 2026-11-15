@@ -82,6 +82,7 @@ services:
     environment:
       SIMULATOR_DEVICE_PORT: ${SIMULATOR_DEVICE_PORT:-4100}
       SIMULATOR_CONTROL_PORT: ${SIMULATOR_CONTROL_PORT:-4101}
+      SIMULATOR_GRPC_PORT: ${SIMULATOR_GRPC_PORT:-4102}
       # Starts with the demo devices, and registers them with the monitor. One already registered is left as it is,
       # so a restart does not undo changes made through the monitor's API.
       SIMULATOR_DEVICES_FILE: demo-devices.json
@@ -90,6 +91,7 @@ services:
     ports:
       # The same port inside and out: a device names the port it answers on, which must work from both.
       - 127.0.0.1:${SIMULATOR_DEVICE_PORT:-4100}:${SIMULATOR_DEVICE_PORT:-4100}
+      - 127.0.0.1:${SIMULATOR_GRPC_PORT:-4102}:${SIMULATOR_GRPC_PORT:-4102}
       # The control API, to add devices and change how they answer. Never given to the monitor.
       - 127.0.0.1:${SIMULATOR_CONTROL_PORT:-4101}:${SIMULATOR_CONTROL_PORT:-4101}
     networks:

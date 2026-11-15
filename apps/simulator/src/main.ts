@@ -24,11 +24,12 @@ if (monitorUrl !== undefined) {
 const simulator = createSimulator({
   host: env('HOST') ?? '127.0.0.1',
   devicePort,
+  grpcPort: Number(env('SIMULATOR_GRPC_PORT') ?? 4102),
   controlPort: Number(env('SIMULATOR_CONTROL_PORT') ?? 4101),
   devices: playing.map(({ device }) => device),
 });
-const { deviceUrl, controlUrl } = await simulator.start();
-console.log(JSON.stringify({ msg: 'Simulator started', deviceUrl, controlUrl, devices: playing.length }));
+const { deviceUrl, grpcPort, controlUrl } = await simulator.start();
+console.log(JSON.stringify({ msg: 'Simulator started', deviceUrl, grpcPort, controlUrl, devices: playing.length }));
 
 const stop = () => void simulator[Symbol.asyncDispose]();
 process.once('SIGINT', stop);

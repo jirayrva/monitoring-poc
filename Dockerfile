@@ -24,13 +24,21 @@ USER node
 EXPOSE 3000
 CMD ["node", "src/main.ts"]
 
-# The simulator's devices need no dependencies. Only its fleet script does, which runs from the host.
+# The simulator's production dependencies, and the contracts it reads the proto from.
+FROM base AS simulator-build
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/simulator/package.json apps/simulator/
+COPY packages/contracts/package.json packages/contracts/
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile --prod --filter @device-monitor/simulator...
+COPY packages/contracts packages/contracts
+COPY apps/simulator apps/simulator
+
 FROM node:26.13.0-trixie-slim AS simulator
 ENV NODE_ENV=production HOST=0.0.0.0
-COPY apps/simulator /repo/apps/simulator
+COPY --from=simulator-build /repo /repo
 WORKDIR /repo/apps/simulator
 USER node
-EXPOSE 4100 4101
+EXPOSE 4100 4101 4102
 CMD ["node", "src/main.ts"]
 
 # The stack's one way in: serves the dashboard, a single HTML file, and sends the APIs on (D-66).

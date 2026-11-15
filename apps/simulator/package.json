@@ -10,10 +10,12 @@
     "fleet:remove": "node src/fleet.ts remove"
   },
   "dependencies": {
+    "@device-monitor/contracts": "workspace:*",
+    "@grpc/grpc-js": "^1.14.7",
+    "@grpc/proto-loader": "^0.8.1",
     "p-map": "^7.1.1"
   },
   "devDependencies": {
-    "@device-monitor/contracts": "workspace:*",
     "ajv": "^8.20.0"
   }
 }

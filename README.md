@@ -36,15 +36,15 @@ The first `--build` downloads the base images and npm packages, so run it once o
 
 ## Simulated devices
 
-The stack includes a simulator, so the monitor has devices to probe without real ones. It starts with the nine devices
+The stack includes a simulator, so the monitor has devices to probe without real ones. It starts with the ten devices
 in [`apps/simulator/demo-devices.json`](apps/simulator/demo-devices.json), one per thing worth showing: working, with a
-token, updating, slow and degraded, an unknown status, tampered diagnostics, not answering, another device at its
-address, and a wrong path. It registers them with the monitor as it starts, and leaves one already registered as it
+token, gRPC only, updating, slow and degraded, an unknown status, tampered diagnostics, not answering, another device at
+its address, and a wrong path. It registers them with the monitor as it starts, and leaves one already registered as it
 is, so a restart does not undo a change made through the monitor's API.
 
-Its devices answer on
-`127.0.0.1:4100`, each at `http://127.0.0.1:4100/devices/<deviceId>`, and its control API on `127.0.0.1:4101`. Inside
-Compose, the monitor reaches a device at `http://simulator:4100/devices/<deviceId>`.
+Its devices answer on `127.0.0.1:4100`, each at `http://127.0.0.1:4100/devices/<deviceId>`, with diagnostics over gRPC
+on `127.0.0.1:4102` for every device, and its control API on `127.0.0.1:4101`. Inside Compose, the monitor reaches a
+device at `http://simulator:4100/devices/<deviceId>`.
 
 Add a device, register it with the monitor, then change how it answers while the monitor watches:
 
@@ -58,24 +58,27 @@ curl -X PATCH http://127.0.0.1:4101/devices/sim-1 -H 'content-type: application/
 `GET /devices` lists the simulated devices. `PUT /devices/<deviceId>` adds or replaces one from the defaults, `PATCH`
 changes some of its settings, and `DELETE` removes it. The settings, which the simulator takes as they come (D-63):
 
-| Setting                                          | Default  | What it does                                            |
-|--------------------------------------------------|----------|---------------------------------------------------------|
-| `health`, `diagnostics`                          | `normal` | How it answers that call. See below                     |
-| `status`                                         | `ok`     | Its word on its health. Any word, such as `maintenance` |
-| `token`                                          | none     | A bearer token every call must carry, or 401            |
-| `delayMs`                                        | `0`      | A wait before every answer                              |
-| `dropNext`                                       | `0`      | How many of its next calls drop the connection          |
-| `deviceType`                                     | `switch` | Its type                                                |
-| `hardware`, `softwareVersion`, `firmwareVersion` |          | What its diagnostics report                             |
+| Setting                                          | Default    | What it does                                            |
+|--------------------------------------------------|------------|---------------------------------------------------------|
+| `health`, `diagnostics`                          | `normal`   | How it answers that call. See below                     |
+| `status`                                         | `ok`       | Its word on its health. Any word, such as `maintenance` |
+| `token`                                          | none       | A bearer token every call must carry, or 401            |
+| `delayMs`                                        | `0`        | A wait before every answer                              |
+| `dropNext`                                       | `0`        | How many of its next calls drop the connection          |
+| `deviceType`                                     | `switch`   | Its type                                                |
+| `protocols`                                      | `["rest"]` | What it serves diagnostics in, the one it prefers first |
+| `hardware`, `softwareVersion`, `firmwareVersion` |            | What its diagnostics report                             |
 
 How it answers a call: `normal`, `garbage` (JSON the device API never sends), `html` (a page, as a captive portal
 sends), `fails` (500), `not_found` (404), `gateway_error` (502), `hangs`, `resets`, or `truncates` (cut off partway).
 Health can also be `impostor` (another device's ID), and diagnostics `tampered` (a checksum that does not match).
+Over gRPC, `fails` answers `INTERNAL`, `not_found` `NOT_FOUND`, `gateway_error` and `resets` `UNAVAILABLE`, and
+`truncates` `DATA_LOSS`. `garbage` and `html` answer OK, carrying JSON that is no diagnostics, or a page.
 
 The simulator keeps changes in memory, so a restart brings back the devices in the file as they are there.
-`SIMULATOR_DEVICE_PORT` and `SIMULATOR_CONTROL_PORT` move its ports. Run on its own (`pnpm --filter
-@device-monitor/simulator dev`), it starts empty, unless `SIMULATOR_DEVICES_FILE` names a file, and registers them only
-with the monitor `SIMULATOR_MONITOR_URL` names, at `SIMULATOR_DEVICE_BASE_URL`.
+`SIMULATOR_DEVICE_PORT`, `SIMULATOR_GRPC_PORT` and `SIMULATOR_CONTROL_PORT` move its ports. Run on its own
+(`pnpm --filter @device-monitor/simulator dev`), it starts empty, unless `SIMULATOR_DEVICES_FILE` names a file, and
+registers them only with the monitor `SIMULATOR_MONITOR_URL` names, at `SIMULATOR_DEVICE_BASE_URL`.
 
 ### A fleet, to see it at scale
 

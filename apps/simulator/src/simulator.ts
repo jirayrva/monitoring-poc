@@ -4,10 +4,12 @@ import { json } from 'node:stream/consumers';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { defaults, diagnosticsOf, healthOf } from './device.ts';
 import type { SimulatedDevice } from './device.ts';
+import { createGrpcServer } from './grpc-server.ts';
 
 type SimulatorConfig = {
   host: string;
   devicePort: number;
+  grpcPort: number;
   /** Where the control API answers: apart from the devices, so a monitor never reaches it. 0 picks a free port. */
   controlPort: number;
   devices: SimulatedDevice[];
@@ -15,7 +17,7 @@ type SimulatorConfig = {
 
 /** Disposing it closes its servers, and every connection still open, such as one to a device that hangs. */
 type Simulator = AsyncDisposable & {
-  start: () => Promise<{ deviceUrl: string; controlUrl: string }>;
+  start: () => Promise<{ deviceUrl: string; grpcPort: number; controlUrl: string }>;
 };
 
 const devicePath = /^\/devices\/([^/]+)\/v1\/(health|diagnostics)$/;
@@ -50,7 +52,8 @@ const close = (server: Server) =>
 const createSimulator = (config: SimulatorConfig): Simulator => {
   const { host, controlPort } = config;
   const devices = new Map(config.devices.map((device) => [device.deviceId, device]));
-  let devicePort = config.devicePort;
+  // The ports health answers name, known once each server listens, as a test picks free ones.
+  const ports = { rest: config.devicePort, grpc: config.grpcPort };
 
   const answerDevice = async (request: IncomingMessage, response: ServerResponse, device: SimulatedDevice) => {
     const call = devicePath.exec(request.url ?? '')?.[2];
@@ -66,7 +69,7 @@ const createSimulator = (config: SimulatorConfig): Simulator => {
 
     await sleep(device.delayMs);
     const diagnostics = diagnosticsOf(device);
-    const body = call === 'health' ? JSON.stringify(healthOf(device, devicePort)) : diagnostics.body;
+    const body = call === 'health' ? JSON.stringify(healthOf(device, ports)) : diagnostics.body;
     switch (call === 'health' ? device.health : device.diagnostics) {
       case 'garbage':
         return sendJson(response, 200, { unexpected: true });
@@ -157,16 +160,18 @@ const createSimulator = (config: SimulatorConfig): Simulator => {
     void answerControl(request, response);
   });
 
+  const grpcServer = createGrpcServer(devices);
   const resources = new AsyncDisposableStack();
   return {
     start: async () => {
-      const deviceUrl = await listen(deviceServer, host, devicePort);
+      const deviceUrl = await listen(deviceServer, host, ports.rest);
       resources.defer(() => close(deviceServer));
-      // A device names the port it answers on, so a free port picked for tests must be known first.
-      devicePort = Number(new URL(deviceUrl).port);
+      ports.rest = Number(new URL(deviceUrl).port);
+      ports.grpc = await grpcServer.listen(host, ports.grpc);
+      resources.defer(() => grpcServer.close());
       const controlUrl = await listen(controlServer, host, controlPort);
       resources.defer(() => close(controlServer));
-      return { deviceUrl, controlUrl };
+      return { deviceUrl, grpcPort: ports.grpc, controlUrl };
     },
     [Symbol.asyncDispose]: () => resources.disposeAsync(),
   };

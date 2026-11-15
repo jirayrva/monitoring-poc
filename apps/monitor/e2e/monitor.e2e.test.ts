@@ -11,6 +11,7 @@ type StatusJson = {
   health?: { state: string; reported?: string };
   diagnostics?: {
     state: string;
+    protocol?: string;
     checksum?: { comparison: string; generator: { name: string; version: string; standIn: boolean } };
   };
 };
@@ -112,6 +113,30 @@ describe('the monitor, run as docker compose up runs it', () => {
       assert.equal(status.diagnostics?.state, 'available');
       assert.deepEqual(status.diagnostics?.checksum?.comparison, 'match');
       assert.deepEqual(status.diagnostics?.checksum?.generator, { name: 'checksum', version: 'e2e', standIn: false });
+    });
+
+    it('reads diagnostics over gRPC from a device that offers only gRPC, and their checksum matches', async () => {
+      // Arrange
+      await addDevice('grpc-only', { protocols: ['grpc'] });
+
+      // Act
+      const status = await waitForStatus('grpc-only', 'read', (each) => each.diagnostics?.state === 'available');
+
+      // Assert
+      assert.equal(status.state, 'up');
+      assert.equal(status.diagnostics?.protocol, 'grpc');
+      assert.equal(status.diagnostics?.checksum?.comparison, 'match');
+    });
+
+    it('reads diagnostics over gRPC when the device prefers it, though it offers REST too', async () => {
+      // Arrange
+      await addDevice('grpc-first', { protocols: ['grpc', 'rest'] });
+
+      // Act
+      const status = await waitForStatus('grpc-first', 'read', (each) => each.diagnostics?.state === 'available');
+
+      // Assert
+      assert.equal(status.diagnostics?.protocol, 'grpc');
     });
 
     it('reports a checksum that does not match, and keeps the device up', async () => {
@@ -246,10 +271,12 @@ describe('the monitor, run as docker compose up runs it', () => {
       // Act
       const lobby = await waitForState('demo-lobby-switch', 'up');
       const camera = await waitForState('demo-door-camera', 'up');
+      const gate = await waitForState('demo-gate-controller', 'up');
 
       // Assert
       assert.equal(lobby.diagnostics?.checksum?.comparison, 'match');
       assert.equal(camera.diagnostics?.state, 'available');
+      assert.equal(gate.diagnostics?.protocol, 'grpc');
     });
 
     it('leaves a demo device changed through the API as it is when the simulator restarts', async () => {

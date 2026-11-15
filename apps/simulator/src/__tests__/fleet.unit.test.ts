@@ -40,6 +40,7 @@ const startSimulator = async (t: TestContext, deviceIds: string[] = []) => {
   const simulator = createSimulator({
     host: '127.0.0.1',
     devicePort: 0,
+    grpcPort: 0,
     controlPort: 0,
     devices: deviceIds.map((deviceId) => defaults(deviceId)),
   });
@@ -68,15 +69,18 @@ describe('fleetOf', () => {
     assert.deepEqual(fleetOf(1001).slice(0, 12), fleet);
   });
 
-  it('is the same every time, mostly working, with a few devices that misbehave', () => {
+  it('is the same every time, mostly working, with a few devices that misbehave, and some preferring gRPC', () => {
     // Act
     const fleet = fleetOf(1001);
 
     // Assert
     assert.deepEqual(fleet, fleetOf(1001));
-    const misbehaving = fleet.filter(({ simulated }) => Object.keys(simulated).length > 1);
+    const misbehaving = fleet.filter(({ simulated }) =>
+      ['health', 'status', 'delayMs'].some((setting) => setting in simulated),
+    );
     assert.ok(misbehaving.length > 0 && misbehaving.length < fleet.length / 10, String(misbehaving.length));
     assert.partialDeepStrictEqual(fleet[96]?.simulated, { health: 'hangs' });
+    assert.deepEqual(fleet[6]?.simulated.protocols, ['grpc', 'rest']);
   });
 
   for (const size of [0, maxFleetSize + 1, 1.5, Number.NaN]) {

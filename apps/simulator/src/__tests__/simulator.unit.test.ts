@@ -13,7 +13,7 @@ const isHealth = ajv.compile(healthSchema);
 const isDiagnostics = ajv.compile(diagnosticsSchema);
 
 const start = async (t: TestContext, ...devices: SimulatedDevice[]) => {
-  const simulator = createSimulator({ host: '127.0.0.1', devicePort: 0, controlPort: 0, devices });
+  const simulator = createSimulator({ host: '127.0.0.1', devicePort: 0, grpcPort: 0, controlPort: 0, devices });
   const { deviceUrl, controlUrl } = await simulator.start();
   t.after(() => simulator[Symbol.asyncDispose]());
   return {

@@ -24,6 +24,8 @@ type Behaviour =
   | 'resets'
   | 'truncates';
 
+type Protocol = 'rest' | 'grpc';
+
 type SimulatedDevice = {
   deviceId: string;
   deviceType: string;
@@ -35,6 +37,7 @@ type SimulatedDevice = {
   diagnostics: Behaviour | 'tampered';
   delayMs: number;
   dropNext: number;
+  protocols: Protocol[];
   hardware: { model: string; revision: string; serial: string };
   softwareVersion: string;
   firmwareVersion: string;
@@ -49,6 +52,7 @@ const defaults = (deviceId: string): SimulatedDevice => ({
   diagnostics: 'normal',
   delayMs: 0,
   dropNext: 0,
+  protocols: ['rest'],
   hardware: { model: 'SIM-24', revision: 'r1', serial: `SIM-${deviceId.toUpperCase()}` },
   softwareVersion: '1.0.0',
   firmwareVersion: '1.0.0',
@@ -56,17 +60,17 @@ const defaults = (deviceId: string): SimulatedDevice => ({
 
 const checksumAlgorithm = 'sha256';
 
-const healthOf = (device: SimulatedDevice, restPort: number) => ({
+const healthOf = (device: SimulatedDevice, ports: Record<Protocol, number>) => ({
   status: device.status,
   deviceId: device.health === 'impostor' ? `${device.deviceId}-impostor` : device.deviceId,
   deviceType: device.deviceType,
-  protocols: [{ name: 'rest', version: '1', port: restPort }],
+  protocols: device.protocols.map((name) => ({ name, version: '1', port: ports[name] })),
   checksumAlgorithm,
 });
 
 /**
- * The answer to GET /v1/diagnostics, and the checksum of exactly its bytes, for the Diagnostics-Checksum header. A
- * tampered device changes the checksum's first digit.
+ * The diagnostics, as the JSON a REST answer's body and a gRPC answer both carry, and the checksum of exactly those
+ * bytes. A tampered device changes the checksum's first digit.
  */
 const diagnosticsOf = (device: SimulatedDevice) => {
   const { hardware, softwareVersion, firmwareVersion, status } = device;
@@ -79,4 +83,4 @@ const diagnosticsOf = (device: SimulatedDevice) => {
 };
 
 export { defaults, diagnosticsOf, healthOf };
-export type { Behaviour, SimulatedDevice };
+export type { Behaviour, Protocol, SimulatedDevice };
